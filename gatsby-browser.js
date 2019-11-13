@@ -1,1 +1,1 @@
-require("prismjs/themes/prism-tomorrow.css");
+require("./static/css/highlight/prism-vs.css");
