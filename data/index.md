@@ -6,7 +6,7 @@ subtitle: a workflow specification language written in OCaml
 OCurrent allows you to specify a workflow / pipeline for keeping things
 up-to-date.
 
-![Example OCurrent pipeline](./pipeline.svg)
+![Example OCurrent pipeline](/pipeline.svg)
 
 For example, the pipeline shown about fetches the head of a GitHub repository's
 `master` branch, builds it, runs the tests, and deploys the binary if the tests

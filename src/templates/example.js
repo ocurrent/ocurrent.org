@@ -3,25 +3,24 @@ import Prism from "prismjs";
 import "prismjs/components/prism-ocaml";
 import { graphql } from "gatsby";
 
-import "./index.css";
-
-class HomePage extends React.Component {
+class Template extends React.Component {
   componentDidMount() {
     Prism.highlightAll();
   }
 
   render() {
     const { data } = this.props;
-    const { html, frontmatter } = data.markdownRemark;
-    const { title, subtitle } = frontmatter;
+    const { markdownRemark } = data;
+    const { frontmatter, html } = markdownRemark;
+    const { title } = frontmatter;
 
     return (
       <>
         <div className="wrapper">
           <div className="heading-wrapper">
-            <h1 className="title-large">{title}</h1>
-            <h2 className="subtitle">{subtitle}</h2>
+            <h1 class="title-large">Tutorials</h1>
           </div>
+          <h1>{title}</h1>
           <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </>
@@ -29,16 +28,15 @@ class HomePage extends React.Component {
   }
 }
 
-export const query = graphql`
-  query HomePageQuery {
-    markdownRemark {
+export const pageQuery = graphql`
+  query($path: String!) {
+    markdownRemark(frontmatter: { path: { eq: $path } }) {
+      html
       frontmatter {
         title
-        subtitle
       }
-      html
     }
   }
 `;
 
-export default HomePage;
+export default Template;
