@@ -12,12 +12,16 @@ class HomePage extends React.Component {
 
   render() {
     const { data } = this.props;
-    const { html } = data.markdownRemark;
+    const { html, frontmatter } = data.markdownRemark;
+    const { title, subtitle } = frontmatter;
 
     return (
       <>
         <div className="wrapper">
-          <h1 className="title">OCurrent</h1>
+          <div className="heading-wrapper">
+            <h1 className="title">{title}</h1>
+            <h2 className="subtitle">{subtitle}</h2>
+          </div>
           <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </>
@@ -28,6 +32,10 @@ class HomePage extends React.Component {
 export const query = graphql`
   query HomePageQuery {
     markdownRemark {
+      frontmatter {
+        title
+        subtitle
+      }
       html
     }
   }
