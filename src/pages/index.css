@@ -30,7 +30,15 @@ code {
   line-height: 1.5;
 }
 
+img {
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
 .heading-wrapper {
+  padding-top: 1em;
   text-align: center;
 }
 

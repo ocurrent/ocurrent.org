@@ -24,6 +24,8 @@ module.exports = {
         noInlineHighlight: true
       }
     },
+    "gatsby-plugin-sharp",
+    "gatsby-transformer-inline-svg",
     {
       resolve: `gatsby-plugin-google-fonts`,
       options: {
