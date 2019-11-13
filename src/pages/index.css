@@ -18,7 +18,6 @@ body {
   font-family: "Inter", sans-serif;
   font-weight: 400;
   font-size: 16px;
-  line-height: 1.5;
   color: #111111;
   height: 100%;
 }
@@ -27,9 +26,30 @@ code {
   font-family: "Source Code Pro", monospace !important;
 }
 
-.title {
-  font-size: 4em;
+.content {
+  line-height: 1.5;
+}
+
+.heading-wrapper {
   text-align: center;
+}
+
+.title {
+  text-align: center;
+  font-size: 4em;
+  margin-bottom: 0;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: #2f8f3c;
+}
+
+.subtitle {
+  font-size: 1.2em;
+  color: #333;
+  margin-bottom: 50px;
+  font-weight: 400;
+  text-align: center;
+  font-style: italic;
 }
 
 .wrapper {

@@ -18,7 +18,7 @@ class HomePage extends React.Component {
       <>
         <div className="wrapper">
           <h1 className="title">OCurrent</h1>
-          <div dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </>
     );
