@@ -27,7 +27,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-google-fonts`,
       options: {
-        fonts: [`Ubuntu Mono`, `Titillium Web:400,600,700`]
+        fonts: [`Source Code Pro`]
       }
     }
   ]
