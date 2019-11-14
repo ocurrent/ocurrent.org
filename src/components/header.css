@@ -11,6 +11,13 @@
   box-shadow: 0 8px 6px -7px #999;
 }
 
+.navbar .wrapper {
+  display: flex;
+  flex-flow: row nowrap;
+  flex-direction: row;
+  align-items: center;
+}
+
 .navbar .navbar-nav {
   display: flex;
   margin: 0;
@@ -18,8 +25,11 @@
   list-style: none;
 }
 
+.navbar .navbar-nav-right {
+  margin-left: auto;
+}
+
 .navbar .nav-item {
-  display: block;
   padding: 0.5rem 0.8rem;
 }
 
@@ -54,4 +64,13 @@
 
 .flex-row {
   flex-direction: row;
+}
+
+.icon-github {
+  display: inline-block;
+
+  height: 100%;
+  width: 25px;
+  color: #2f8f3c;
+  margin: 0;
 }

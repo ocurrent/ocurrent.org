@@ -28,8 +28,8 @@ body {
 }
 
 a {
-    color: #428BCA;
-    font-weight: 600;
+  color: #428bca;
+  font-weight: 600;
 }
 
 code {
@@ -42,7 +42,7 @@ code {
   line-height: 1.5;
 }
 
-img {
+.content img {
   margin-top: 2.5em;
   margin-bottom: 2.5em;
   margin-left: 50%;
@@ -80,16 +80,15 @@ img {
 }
 
 .footer {
-    padding-left: 2em;
-    padding-right: 2em;
-    font-size: 95%;
-    margin-bottom: 50px;
-    color: #333;
-
+  padding-left: 2em;
+  padding-right: 2em;
+  font-size: 95%;
+  margin-bottom: 50px;
+  color: #333;
 }
 
 .copyright-div {
-    width: 80%;
-    margin: 2rem auto;
-    color: #ddd;
+  width: 80%;
+  margin: 2rem auto;
+  color: #ddd;
 }
