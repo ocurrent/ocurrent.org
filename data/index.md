@@ -38,19 +38,24 @@ An OCurrent pipeline is written using an OCaml eDSL. When OCurrent evaluates it,
 it records the inputs used (e.g. the current set of open PRs and the head of
 each one), monitors them, and automatically recalculates when an input changes.
 
-The [OCurrent wiki] contains documentation and examples. In particular, you
-might like to start by reading about the [example pipelines] or how to [write
-your own plugins][writing-plugins].
+The [OCurrent wiki][wiki] contains documentation and examples. In particular,
+you might like to start by reading about the [example pipelines](./examples) or
+how to [write your own plugins][writing-plugins].
 
 Larger uses of OCurrent include the [OCaml Docker base image
-builder][docker-base-images] and the CI that tests this repository itself.
+builder][docker-base-images] and the [CI pipeline][ocaml-ci] for OCaml platform projects.
 
-# Licensing
+<hr class="copyright-div">
+<div class="footer">
+OCurrent is developed and maintained by OCaml Labs Consultancy and Tarides for
+use in the OCaml open-source community.
 
-OCurrent is licensed under the Apache License, Version 2.0.
+© 2019, the OCurrent authors. Distributed under the [Apache-2.0
+license][license].
+</div>
 
-[docker-base-images]: https://github.com/ocaml-ci/docker-base-images
-[writing-plugins]: https://github.com/ocaml-ci/ocurrent/wiki/Writing-plugins
-[example pipelines]: https://github.com/ocaml-ci/ocurrent/wiki/Example-pipelines
-[ocurrent wiki]: https://github.com/ocaml-ci/ocurrent/wiki
-[license]: ./LICENSE
+[docker-base-images]: https://github.com/ocurrent/docker-base-images
+[ocaml-ci]: https://github.com/ocurrent/ocaml-ci
+[writing-plugins]: https://github.com/ocurrent/ocurrent/wiki/Writing-plugins
+[wiki]: https://github.com/ocurrent/ocurrent/wiki
+[license]: https://github.com/ocurrent/ocurrent/blob/master/LICENSE
