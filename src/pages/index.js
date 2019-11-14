@@ -14,7 +14,7 @@ class HomePage extends React.Component {
 
   render() {
     const { data } = this.props;
-    const { html, frontmatter } = data.markdownRemark;
+    const { html, frontmatter } = data.allMarkdownRemark.edges[0].node;
     const { title, subtitle } = frontmatter;
 
     return (
@@ -34,12 +34,18 @@ class HomePage extends React.Component {
 
 export const query = graphql`
   query HomePageQuery {
-    markdownRemark {
-      frontmatter {
-        title
-        subtitle
+    allMarkdownRemark(
+      filter: { fileAbsolutePath: { regex: "/data/index.md$/" } }
+    ) {
+      edges {
+        node {
+          frontmatter {
+            title
+            subtitle
+          }
+          html
+        }
       }
-      html
     }
   }
 `;

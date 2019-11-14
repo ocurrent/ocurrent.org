@@ -11,9 +11,14 @@ export default function Template({ data }) {
     <>
       <Header />
       <div className="wrapper">
+        <br />
         {examples.map(({ node }) => {
+          const path = node.frontmatter.path;
+          const index = parseInt(path.slice(-2));
+
           return (
             <ExamplePanel
+              index={index}
               frontmatter={node.frontmatter}
               html={node.html}
               excerpt={node.excerpt}
@@ -36,7 +41,11 @@ export const pageQuery = graphql`
           excerpt
           frontmatter {
             title
+            subtitle
             path
+            image {
+              publicURL
+            }
           }
         }
       }

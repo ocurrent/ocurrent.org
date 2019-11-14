@@ -1,6 +1,8 @@
 ---
 title: "build\_matrix"
-path: "/tutorial/02"
+subtitle: "builds on multiple compiler versions"
+path: "/examples/02"
+image: "./example2.svg"
 ---
 
 [build_matrix.ml][] contains a slightly more advanced pipeline:

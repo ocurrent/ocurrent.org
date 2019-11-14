@@ -1,6 +1,8 @@
 ---
 title: "docker\_build\_local"
-path: "/tutorial/01"
+subtitle: "simple sequential pipeline"
+path: "/examples/01"
+image: "./example1.svg"
 ---
 
 This monitors a local Git repository (`repo`), from which it gets the current

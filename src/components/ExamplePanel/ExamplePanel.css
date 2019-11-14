@@ -1,0 +1,46 @@
+.link {
+  display: inline-block;
+  margin-right: 30px;
+  max-width: 330px;
+  background: white;
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #bbb;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07);
+  border-radius: 3px;
+}
+
+.image-pane {
+  height: 150px;
+  overflow: hidden;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.title-pane {
+  border-top: 2px solid #bbb;
+  padding: 1em;
+}
+
+.image-bg {
+  width: 100%;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-below: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.index {
+  color: #888;
+  margin-right: 0.5rem;
+}
+
+.title {
+  margin-top: 0.5em;
+  /* text-transform: uppercase; */
+}
+
+a {
+  text-decoration: none;
+  color: #000;
+}
