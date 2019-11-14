@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "gatsby";
 
 import "./header.css";
 
@@ -7,14 +8,19 @@ const Header = () => (
     <div className="wrapper">
       <ul className="navbar-nav flex-row">
         <li className="nav-item">
-          <a className="nav-link" href="/">
+          <Link className="nav-link" activeClassName="nav-link-active" to="/">
             Home
-          </a>
+          </Link>
         </li>
         <li className="nav-item">
-          <a className="nav-link" href="/tutorial/01">
-            Tutorials
-          </a>
+          <Link
+            className="nav-link"
+            activeClassName="nav-link-active"
+            partiallyActive={true}
+            to="/examples"
+          >
+            Examples
+          </Link>
         </li>
       </ul>
     </div>

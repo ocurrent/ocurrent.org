@@ -28,6 +28,28 @@
   text-transform: uppercase;
   font-weight: 600;
   color: #000;
+  transition: all 150ms ease-in;
+  position: relative;
+}
+
+.navbar .nav-link:hover {
+  color: #2f8f3c;
+}
+
+.navbar .nav-link-active::after {
+  content: "";
+  position: absolute;
+  bottom: -16px;
+
+  height: 8px;
+  width: 140%;
+  background: #2f8f3c;
+  z-index: 101;
+
+  /* Horizontally center */
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
 }
 
 .flex-row {
