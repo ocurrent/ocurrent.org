@@ -7,6 +7,8 @@ import "prismjs/components/prism-ocaml";
 
 import Layout from "../components/layout";
 
+import "./example.css";
+
 class Template extends React.Component {
   componentDidMount() {
     Prism.highlightAll();
@@ -25,7 +27,7 @@ class Template extends React.Component {
         <Helmet title={`Example ${index} | OCurrent`} />
         <div className="wrapper">
           <br />
-          <h1>{title}</h1>
+          <h1 className="title">{title}</h1>
           <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </Layout>

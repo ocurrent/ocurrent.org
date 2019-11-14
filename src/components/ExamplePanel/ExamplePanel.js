@@ -11,7 +11,7 @@ const ExamplePanel = ({ frontmatter, html, excerpt, index }) => {
     <div className="link">
       <Link to={path}>
         <div className="image-pane">
-          <img className="image-bg" src={image.publicURL} alt="" />
+          <img className="image" src={image.publicURL} alt="" />
         </div>
       </Link>
       <div className="title-pane">

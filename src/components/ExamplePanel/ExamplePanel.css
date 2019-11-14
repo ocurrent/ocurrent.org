@@ -16,18 +16,27 @@
   overflow: hidden;
   margin-left: 1em;
   margin-right: 1em;
+  position: relative;
+}
+
+.image-pane .image {
+  width: 100%;
+
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-below: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .title-pane {
   border-top: 2px solid #bbb;
   padding: 1em;
-}
-
-.image-bg {
-  width: 100%;
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
-  border-below: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .index {
@@ -37,7 +46,7 @@
 
 .title {
   margin-top: 0.5em;
-  /* text-transform: uppercase; */
+  text-transform: capitalize;
 }
 
 a {
