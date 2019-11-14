@@ -1,15 +1,16 @@
 import React from "react";
 import { graphql } from "gatsby";
+import Helmet from "react-helmet";
 
-import Header from "../components/header";
+import Layout from "../components/layout";
 import ExamplePanel from "../components/ExamplePanel/ExamplePanel";
 
 export default function Template({ data }) {
   const examples = data.allMarkdownRemark.edges;
 
   return (
-    <>
-      <Header />
+    <Layout>
+      <Helmet title="Examples | OCurrent" />
       <div className="wrapper">
         <br />
         {examples.map(({ node }) => {
@@ -26,7 +27,7 @@ export default function Template({ data }) {
           );
         })}
       </div>
-    </>
+    </Layout>
   );
 }
 

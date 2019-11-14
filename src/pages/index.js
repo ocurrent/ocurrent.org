@@ -1,5 +1,6 @@
 import React from "react";
 import { graphql } from "gatsby";
+import Helmet from "react-helmet";
 
 import Prism from "prismjs";
 import "prismjs/components/prism-ocaml";
@@ -22,6 +23,7 @@ class HomePage extends React.Component {
 
     return (
       <Layout>
+        <Helmet title="OCurrent" />
         <div className="wrapper">
           <div className="heading-wrapper">
             <h1 className="title-large">{title}</h1>

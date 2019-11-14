@@ -1,9 +1,11 @@
 import React from "react";
+import { graphql } from "gatsby";
+import Helmet from "react-helmet";
+
 import Prism from "prismjs";
 import "prismjs/components/prism-ocaml";
-import { graphql } from "gatsby";
 
-import Header from "../components/header";
+import Layout from "../components/layout";
 
 class Template extends React.Component {
   componentDidMount() {
@@ -14,17 +16,19 @@ class Template extends React.Component {
     const { data } = this.props;
     const { markdownRemark } = data;
     const { frontmatter, html } = markdownRemark;
-    const { title } = frontmatter;
+    const { title, path } = frontmatter;
+
+    const index = parseInt(path.slice(-2));
 
     return (
-      <>
-        <Header />
+      <Layout>
+        <Helmet title={`Example ${index} | OCurrent`} />
         <div className="wrapper">
           <br />
           <h1>{title}</h1>
           <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
-      </>
+      </Layout>
     );
   }
 }
@@ -35,6 +39,7 @@ export const pageQuery = graphql`
       html
       frontmatter {
         title
+        path
       }
     }
   }
