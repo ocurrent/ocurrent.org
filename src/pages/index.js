@@ -3,6 +3,8 @@ import Prism from "prismjs";
 import "prismjs/components/prism-ocaml";
 import { graphql } from "gatsby";
 
+import Header from "../components/header";
+
 import "./index.css";
 
 class HomePage extends React.Component {
@@ -17,6 +19,7 @@ class HomePage extends React.Component {
 
     return (
       <>
+        <Header />
         <div className="wrapper">
           <div className="heading-wrapper">
             <h1 className="title-large">{title}</h1>

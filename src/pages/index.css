@@ -8,6 +8,11 @@ html {
   }
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 html,
 body {
   padding: 0;

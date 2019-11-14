@@ -1,0 +1,35 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 100;
+
+  padding: 0.5rem 1rem;
+
+  -webkit-box-shadow: 0 8px 6px -7px #999;
+  -moz-box-shadow: 0 8px 6px -7px #999;
+  box-shadow: 0 8px 6px -7px #999;
+}
+
+.navbar .navbar-nav {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navbar .nav-item {
+  display: block;
+  padding: 0.5rem 0.8rem;
+}
+
+.navbar .nav-link {
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #000;
+}
+
+.flex-row {
+  flex-direction: row;
+}
