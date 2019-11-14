@@ -78,17 +78,3 @@ code {
   padding-left: 2em;
   padding-right: 2em;
 }
-
-.footer {
-  padding-left: 2em;
-  padding-right: 2em;
-  font-size: 95%;
-  margin-bottom: 50px;
-  color: #333;
-}
-
-.copyright-div {
-  width: 80%;
-  margin: 2rem auto;
-  color: #ddd;
-}

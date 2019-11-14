@@ -45,15 +45,6 @@ how to [write your own plugins][writing-plugins].
 Larger uses of OCurrent include the [OCaml Docker base image
 builder][docker-base-images] and the [CI pipeline][ocaml-ci] for OCaml platform projects.
 
-<hr class="copyright-div">
-<div class="footer">
-OCurrent is developed and maintained by OCaml Labs Consultancy and Tarides for
-use in the OCaml open-source community.
-
-© 2019, the OCurrent authors. Distributed under the [Apache-2.0
-license][license].
-</div>
-
 [docker-base-images]: https://github.com/ocurrent/docker-base-images
 [ocaml-ci]: https://github.com/ocurrent/ocaml-ci
 [writing-plugins]: https://github.com/ocurrent/ocurrent/wiki/Writing-plugins
