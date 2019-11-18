@@ -12,7 +12,7 @@ export default function Template({ data }) {
     <Layout>
       <Helmet title="Examples | OCurrent" />
       <div className="wrapper">
-        <br />
+        <h1 className="title">Examples</h1>
         {examples.map(({ node }) => {
           const path = node.frontmatter.path;
           const index = parseInt(path.slice(-2));
