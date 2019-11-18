@@ -15,7 +15,7 @@ const ExamplePanel = ({ frontmatter, html, excerpt, index }) => {
         </div>
       </Link>
       <div className="title-pane">
-        <h3 className="title">
+        <h3 className="example-title">
           <Link to={path}>
             <span class="index">{index}.</span> {title}
           </Link>

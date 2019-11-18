@@ -26,7 +26,6 @@ class Template extends React.Component {
       <Layout>
         <Helmet title={`Example ${index} | OCurrent`} />
         <div className="wrapper">
-          <br />
           <h1 className="title">{title}</h1>
           <div className="content" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
