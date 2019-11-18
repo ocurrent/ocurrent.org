@@ -25,6 +25,7 @@ module.exports = {
       }
     },
     "gatsby-plugin-sharp",
+    "gatsby-transformer-yaml",
     "gatsby-transformer-sharp",
     "gatsby-transformer-inline-svg",
     {

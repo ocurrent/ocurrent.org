@@ -41,6 +41,16 @@ const Header = () => {
                     Examples
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link
+                    className="nav-link"
+                    activeClassName="nav-link-active"
+                    partiallyActive={true}
+                    to="/blog"
+                  >
+                    Blog
+                  </Link>
+                </li>
               </ul>
               <ul className="navbar-nav navbar-nav-right flex-row">
                 <a href="https://github.com/ocurrent/ocurrent">
