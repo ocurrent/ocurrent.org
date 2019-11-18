@@ -6,9 +6,7 @@
 
   padding: 0.5rem 1rem;
 
-  -webkit-box-shadow: 0 8px 6px -7px #999;
-  -moz-box-shadow: 0 8px 6px -7px #999;
-  box-shadow: 0 8px 6px -7px #999;
+  border-bottom: solid #ddd 1px;
 }
 
 .navbar .wrapper {
@@ -51,7 +49,7 @@
   position: absolute;
   bottom: -16px;
 
-  height: 8px;
+  height: 6px;
   width: 140%;
   background: #2f8f3c;
   z-index: 101;
