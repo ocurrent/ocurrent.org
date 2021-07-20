@@ -57,6 +57,6 @@ yellow means queued or waiting for permission to start, and red means failed.
 Clicking on a box shows the log for that operation (though not all operations
 have logs; `head commit` doesn't, for example).
 
-[docker_build_local.ml]: https://github.com/talex5/ocurrent/blob/master/examples/docker_build_local.ml
-[plugins]: https://github.com/talex5/ocurrent/blob/master/plugins
+[docker_build_local.ml]: https://github.com/ocurrent/ocurrent/blob/master/doc/examples/docker_build_local.ml
+[plugins]: https://github.com/ocurrent/ocurrent/blob/master/plugins
 [graphviz]: https://graphviz.org/

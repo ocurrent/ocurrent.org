@@ -40,4 +40,4 @@ versions of the compiler and the Dockerfile just selects one of them).
 
 The generated images are then tagged with the compiler version used to build them.
 
-[build_matrix.ml]: https://github.com/talex5/ocurrent/blob/master/examples/build_matrix.ml
+[build_matrix.ml]: https://github.com/ocurrent/ocurrent/blob/master/doc/examples/build_matrix.ml
