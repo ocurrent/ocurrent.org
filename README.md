@@ -14,6 +14,12 @@ To be able to develop with OCurrent, you need to have the following tools instal
 To install `hugo`, you can follow these instructions on the [gohugo.io website](https://gohugo.io/getting-started/installing/).
 
 
+### OCaml installation
+
+```
+opam install . --deps-only
+```
+
 ### Run a development server
 
 To run a development server, you can run this command and go to [localhost:1313](http://localhost:1313)
@@ -26,3 +32,5 @@ to see the result:
 ```
 hugo --minify -d "./public"
 ```
+
+
