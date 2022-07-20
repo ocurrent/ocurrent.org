@@ -1,0 +1,30 @@
+{{ define "main" }}
+
+{{ partial "topline" . }}
+
+{{ .Content }}
+
+<div class="blog-wrapper">
+    {{ range .Pages }} {{ $href := .Permalink }} {{ if (isset .Params "link") }} {{ $href =
+    .Params.link }} {{ end }}
+    <div class="blog-preview">
+        <a href="{{ $href }}">
+            <div class="image-pane" >
+                <img src="{{ .Params.image }}" />
+            </div>
+        </a>
+        <div class="content-pane">
+            <div class="title">
+                <a href="{{ $href }}">{{ .Title }}</a>
+            </div>
+            <div class="metadata">
+                by <a href="{{ .Params.author_profile }}"> {{ .Params.author }}</a>
+                on {{ .Params.date | time.Format ":date_long" }}
+            </div>
+            <div class="summary">{{ .Summary }}</div>
+        </div>
+    </div>
+    {{ end }}
+</div>
+
+{{ end }}

@@ -1,0 +1,9 @@
+<div id="topline">
+    <h1>{{ .Page.Title }}</h1>
+    {{ if (isset .Params "description" )}}
+    <hr />
+    <p class="descr">{{ .Page.Description }}</p>
+    {{ else if (isset .Params "summary" )}}
+    <p class="summary">{{ index .Params "summary" }}</p>
+    {{ end }}
+</div>

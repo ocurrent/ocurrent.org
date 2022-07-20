@@ -1,0 +1,20 @@
+{{ define "main" }}
+
+{{ partial "topline" .}}
+
+{{ .Content }}
+
+<div id="team">
+    <h2>Core team</h2>
+    <ul>
+        {{ range $.Site.Data.team.members }}
+        <li>
+            {{.name}}{{if isset . "company"}}, {{.company}} {{end}}{{if isset . "github"}},
+            <a href="https://github.com/{{.github}}">@{{.github}}</a>
+            {{end}}
+        </li>
+        {{ end }}
+    </ul>
+</div>
+
+{{ end }}

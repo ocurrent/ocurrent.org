@@ -1,0 +1,31 @@
+{{ define "main" }}
+
+{{ partial "topline" . }}
+
+{{ .Content }}
+
+<div class="docs">
+    {{ range .Pages.ByTitle.Reverse }}
+    <div class="docs-container">
+        <h2>{{ .Title }}</h2>
+        <div class="docs-pages">
+            {{ range .Pages.ByTitle.Reverse }}
+            <div class="docs-preview">
+                <div class="title">
+                    {{if isset .Params "link" }}
+                    <a href="{{ .Params.link }}">{{ .Title }}</a>
+                    {{ else }}
+                    <a href="{{ .Permalink }}">{{ .Title }}</a>
+                    {{ end }}
+                </div>
+                <div class="metadata">
+                    by {{ .Params.authors }} on {{ .Date | time.Format ":date_long"}}
+                </div>
+                <div class="summary">{{ .Summary }}</div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+    {{ end }}
+</div>
+{{ end }}
