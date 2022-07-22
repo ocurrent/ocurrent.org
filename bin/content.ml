@@ -10,13 +10,14 @@ module Content = struct
   let id = "get-files-contents"
 
   module Key = struct
-    type t = { repo : string; commit : Git.Commit.t }
+    type t = { repo : string; commit : Git.Commit.t; digest : Digest.t }
 
     let to_json t =
       `Assoc
         [
           ("repository", `String t.repo);
           ("commit", `String (Git.Commit.hash t.commit));
+          ("digest", `String t.digest);
         ]
 
     let digest t = Yojson.Safe.to_string (to_json t)
@@ -61,7 +62,7 @@ module Content = struct
     in
     Lwt_list.fold_left_s f [] files
 
-  let build files job { Key.commit; Key.repo } =
+  let build files job { Key.commit; Key.repo; _ } =
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
     Git.with_checkout ~job commit @@ fun dir ->
     extract ~job ~dir repo files >>= Lwt_result.return
@@ -75,7 +76,12 @@ module Cache_docs = Current_cache.Make (Content)
 let fetch ~repo ~commit files =
   Current.component "fetch-doc"
   |> let> commit = commit in
+     let digest =
+       let f x = Yojson.Safe.to_string (File.Copy.info_to_yojson x) in
+       List.map f files |> String.concat "," |> Digest.string |> Digest.to_hex
+     in
      let cache : File.Copy.t list Current.Primitive.t =
-       Cache_docs.get files { Content.Key.repo; Content.Key.commit }
+       Cache_docs.get files
+         { Content.Key.repo; Content.Key.commit; Content.Key.digest }
      in
      cache

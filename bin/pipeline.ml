@@ -14,7 +14,6 @@ let fetch_commit ?branch ~github ~repo () =
     | None -> Gh.Api.head_commit github repo
     | Some branch ->
         let ref = String.concat "/" [ "refs"; "heads"; branch ] in
-
         Gh.Api.head_of github repo (`Ref ref)
   in
   let commit_id = Current.map Gh.Api.Commit.id head in

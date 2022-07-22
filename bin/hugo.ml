@@ -13,11 +13,12 @@ module Hugo = struct
   let id = "hugo-build"
 
   module Key = struct
-    type t = { commit : Current_git.Commit.t }
+    type t = { commit : Current_git.Commit.t; digest : Digest.t }
 
     let to_json t =
       let commit = Current_git.Commit.hash t.commit in
-      `Assoc [ ("commit", `String commit) ]
+      let digest = t.digest in
+      `Assoc [ ("commit", `String commit); ("digest", `String digest) ]
 
     let digest t = Yojson.Safe.to_string (to_json t)
     let pp f t = Fmt.pf f "%s" (Current_git.Commit.hash t.commit)
@@ -76,7 +77,7 @@ module Hugo = struct
     Git.commit ~cwd ~job ~allow_empty:true msg >>= fun () ->
     Git.push ~cwd ~job ~force:true remote branch
 
-  let build { files; indexes; conf } job { Key.commit } =
+  let build { files; indexes; conf } job { Key.commit; _ } =
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
     Current_git.with_checkout ~job commit @@ fun dir ->
     write_all job dir files indexes >>= fun () ->
@@ -93,7 +94,23 @@ end
 
 module Cache_hugo = Current_cache.Make (Hugo)
 
+let digest files indexes =
+  let files =
+    let f x = Yojson.Safe.to_string (File.Copy.to_yojson x) in
+    List.map f files
+  in
+  let indexes =
+    let f x = Yojson.Safe.to_string (File.Index.to_json x) in
+    List.map f indexes
+  in
+  let to_digest = String.concat "," (files @ indexes) in
+  let digest = Digest.string to_digest |> Digest.to_hex in
+  Logs.info (fun l -> l "Digest file to get hash: %s" digest);
+  digest
+
 let build ~commit ~conf files indexes : unit Current.t =
   Current.component "build-with-hugo"
   |> let> commit = commit and> files = files in
-     Cache_hugo.get { files; indexes; conf } { Hugo.Key.commit }
+     let digest = digest files indexes in
+     Cache_hugo.get { files; indexes; conf }
+       { Hugo.Key.commit; Hugo.Key.digest }
