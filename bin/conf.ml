@@ -118,9 +118,9 @@ module Yaml = struct
 
   let index_of_yaml yaml =
     let title = Y.access_str ~field:"title" yaml in
-    let summary = Y.access_str ~field:"summary" yaml in
+    let description = Y.access_str ~field:"description" yaml in
     let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
-    File.Index.v ~title ~summary ~dst ()
+    File.Index.v ~title ~description ~dst ()
 
   let output_of_yaml yaml =
     let yaml = Y.access ~field:"output" yaml in

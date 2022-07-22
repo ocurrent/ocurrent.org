@@ -59,30 +59,30 @@ module Copy = struct
 end
 
 module Index = struct
-  type t = { title : string; summary : string; dst : Fpath.t }
+  type t = { title : string; description : string; dst : Fpath.t }
 
   let of_json : Yojson.Safe.t -> t = function
     | `Assoc
         [
           ("title", `String title);
-          ("summary", `String summary);
+          ("description", `String description);
           ("dst", `String dst);
         ] ->
         let dst = Fpath.v dst in
-        { title; summary; dst }
+        { title; description; dst }
     | _ -> invalid_arg "Unable to parse the JSON for Index."
 
   let to_json t : Yojson.Safe.t =
     `Assoc
       [
         ("title", `String t.title);
-        ("summary", `String t.summary);
+        ("summary", `String t.description);
         ("dst", `String (Fpath.to_string t.dst));
       ]
 
-  let v ~title ~summary ~dst () =
+  let v ~title ~description ~dst () =
     let dst = Fpath.normalize dst in
-    { title; summary; dst }
+    { title; description; dst }
 
   let destination index = index.dst
 
@@ -93,7 +93,7 @@ module Index = struct
       [
         "---";
         Format.sprintf "title: %s" index.title;
-        Format.sprintf "summary: %s" index.summary;
+        Format.sprintf "description: %s" index.description;
         "---";
       ]
     in

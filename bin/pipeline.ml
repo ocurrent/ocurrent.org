@@ -32,12 +32,13 @@ let fetch_file_content selections =
 
 let v ~repo ~branch ~github () =
   let commit = snd (fetch_commit ~branch ~github ~repo ()) in
-  let* conf = Conf.load commit in
-  let repos = Conf.repos conf in
-  let selections = fetch_selections ~github ~repos in
-  let files =
-    let files = fetch_file_content selections in
-    Current.list_seq files |> Current.map List.flatten
-  in
-  let indexes = Conf.indexes conf in
-  Hugo.build ~commit ~conf files indexes
+  Current.component "selection files"
+  |> let** conf = Conf.load commit in
+     let repos = Conf.repos conf in
+     let selections = fetch_selections ~github ~repos in
+     let files =
+       let files = fetch_file_content selections in
+       Current.list_seq files |> Current.map List.flatten
+     in
+     let indexes = Conf.indexes conf in
+     Hugo.build ~commit ~conf files indexes
