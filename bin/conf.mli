@@ -1,31 +1,32 @@
 type t
 (** Abstract type to represent the configuration *)
 
-val base : t -> Current_github.Repo_id.t * string
-(** [base t] gives the repository and the branch associated to the content that
-    will serve as a skeleton for building the website. *)
+val output : t -> Current_github.Repo_id.t * string
+(** [output t] gives the repository and the branch associated to the output
+    repository where the website will be built. *)
 
 val repos : t -> (Current_github.Repo_id.t * File.Copy.info list) list
 (** [repos t] returns, for each repository, the files tracked into this
-    repository. This files are going to be copied into the [base] skeleton. For
+    repository. This files are going to be copied into the base skeleton. For
     more information about the vocabulary, see {!Pipeline}. *)
 
 val indexes : t -> File.Index.t list
 (** [indexes t] returns the list of paths where to create an [_index.md] into
-    the the [base] skeleton. For more information about the vocabulary, see
+    the the base skeleton. For more information about the vocabulary, see
     {!Pipeline}.*)
 
-val from_file : Fpath.t -> t
-(** [from_file path] extracts the configuration from a file located at [path]. *)
+val load : Current_git.Commit.t Current.t -> t Current.t
+(** [load commit] extracts the configuration from a commit on a specific
+    repository. *)
+
+val github_remote : t -> string * string
+(** [git_remote t] returns a tuple with the remote url and the branch to push on
+    github with ssh. *)
 
 module Static : sig
   val hugo_output : string
   (** The path to where hugo should output the build files. *)
 
-  val output_branch : string
-  (** The branch on which the deployement will be made. *)
-
-  val remote : string * string
-  (** The name and the Github ssh address of repository where the site will be
-      pushed. *)
+  val remote_name : string
+  (** The name of the remote to add to git. *)
 end

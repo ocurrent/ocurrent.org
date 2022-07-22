@@ -1,5 +1,6 @@
 val build :
   commit:Current_git.Commit.t Current.t ->
+  conf:Conf.t ->
   File.Copy.t list Current.t ->
   File.Index.t list ->
   unit Current.t

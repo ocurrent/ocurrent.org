@@ -1,63 +1,185 @@
+open Current.Syntax
 module Gh = Current_github
 
 type t = {
-  base : Gh.Repo_id.t * string;
+  output : Gh.Repo_id.t * string;
   repos : (Gh.Repo_id.t * File.Copy.info list) list;
   indexes : File.Index.t list;
 }
 
 let repos t = t.repos
-let base t = t.base
+let output t = t.output
 let indexes t = t.indexes
 
-module Y = Utils.Yaml
+module JSON = struct
+  let extract_string = function
+    | `String str -> str
+    | _ -> failwith "Trying to convert something into a string."
 
-let info_of_yaml yaml =
-  let title = Y.access_str ~field:"title" yaml in
-  let summary = Y.access_str ~field:"summary" yaml in
-  let authors = Y.access_str_array ~field:"authors" yaml in
-  let src = Fpath.v (Y.access_str ~field:"src" yaml) in
-  let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
-  File.Copy.v ~title ~summary ~authors ~src ~dst ()
+  let output_to_json output =
+    Current_github.Repo_id.(
+      let { owner; name }, branch = output in
+      `Assoc
+        [
+          ("owner", `String owner);
+          ("name", `String name);
+          ("branch", `String branch);
+        ])
 
-let repo_of_yaml yaml =
-  let owner = Y.access_str ~field:"owner" yaml in
-  let name = Y.access_str ~field:"name" yaml in
-  let files = Y.access_array ~field:"files" info_of_yaml yaml in
-  (Gh.Repo_id.{ owner; name }, files)
+  let output_of_json = function
+    | `Assoc output ->
+        let owner = List.assoc "owner" output |> extract_string in
+        let name = List.assoc "name" output |> extract_string in
+        let branch = List.assoc "branch" output |> extract_string in
+        (Current_github.Repo_id.{ owner; name }, branch)
+    | _ -> failwith "Corrupted data / output: this is not supposed to happen."
 
-let index_of_yaml yaml =
-  let title = Y.access_str ~field:"title" yaml in
-  let summary = Y.access_str ~field:"summary" yaml in
-  let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
-  File.Index.v ~title ~summary ~dst ()
+  let repo_to_json repos =
+    let f (repo_id, files) =
+      let name =
+        Current_github.Repo_id.(
+          let { owner; name } = repo_id in
+          Format.sprintf "%s/%s" owner name)
+      in
+      let files = `List (List.map File.Copy.info_to_yojson files) in
+      `Assoc [ (name, files) ]
+    in
+    `List (List.map f repos)
 
-let base_of_yaml yaml =
-  let yaml = Y.access ~field:"base" yaml in
-  let base =
-    let owner = Y.access_str ~field:"owner" yaml in
-    let name = Y.access_str ~field:"name" yaml in
-    Gh.Repo_id.{ owner; name }
+  let repo_of_json json =
+    let f = function
+      | `Assoc [ (name, `List files) ] ->
+          let repo_id =
+            match String.split_on_char '/' name with
+            | [ owner; name ] -> Current_github.Repo_id.{ owner; name }
+            | _ ->
+                failwith
+                  "Corrupted data - repo/f/repo_id: this is not supposed to \
+                   happen."
+          in
+          let files = List.map File.Copy.info_of_yojson files in
+          let files = List.map Result.get_ok files in
+          (repo_id, files)
+      | _ -> failwith "Corrupted data - repo/f: this is not supposed to happen."
+    in
+    match json with
+    | `List json -> List.map f json
+    | _ -> failwith "Corrupted data / repo: this is not supposed to happen."
+
+  let index_to_json indexes = `List (List.map File.Index.to_json indexes)
+
+  let index_of_json = function
+    | `List json -> List.map File.Index.of_json json
+    | _ -> failwith "Corrupted data / index: this is not supposed to happen."
+
+  let conf_to_json t =
+    let output = output_to_json t.output in
+    let repos = repo_to_json t.repos in
+    let indexes = index_to_json t.indexes in
+    `Assoc [ ("output", output); ("repos", repos); ("indexes", indexes) ]
+
+  let conf_of_json : Yojson.Safe.t -> t = function
+    | `Assoc [ ("output", output); ("repos", repos); ("indexes", indexes) ] ->
+        let output = output_of_json output in
+        let repos = repo_of_json repos in
+        let indexes = index_of_json indexes in
+        { output; repos; indexes }
+    | _ -> failwith "Corrupted data - conf: this is not supposed to happen."
+end
+
+let github_remote conf =
+  let { Current_github.Repo_id.owner; Current_github.Repo_id.name }, branch =
+    conf.output
   in
-  let branch = Y.access_str ~field:"branch" yaml in
-  (base, branch)
-
-let from_file path =
-  let yaml = Y.parse_file path in
-  {
-    base = base_of_yaml yaml;
-    repos = Y.access_array ~field:"repos" repo_of_yaml yaml;
-    indexes = Y.access_array ~field:"indexes" index_of_yaml yaml;
-  }
+  let url = Format.sprintf "git@github.com:%s/%s.git" owner name in
+  (url, branch)
 
 module Static = struct
-  let owner = "ocurrent-test"
-  let name = "occurent-test.github.io"
   let hugo_output = "public"
   let remote_name = "deploy"
-  let output_branch = "main"
-
-  let remote =
-    let url = Format.sprintf "git@github.com:%s/%s.git" owner name in
-    (remote_name, url)
 end
+
+module Yaml = struct
+  module Y = Utils.Yaml
+
+  let info_of_yaml yaml =
+    let title = Y.access_str ~field:"title" yaml in
+    let summary = Y.access_str ~field:"summary" yaml in
+    let authors = Y.access_str_array ~field:"authors" yaml in
+    let src = Fpath.v (Y.access_str ~field:"src" yaml) in
+    let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
+    File.Copy.v ~title ~summary ~authors ~src ~dst ()
+
+  let repo_of_yaml yaml =
+    let owner = Y.access_str ~field:"owner" yaml in
+    let name = Y.access_str ~field:"name" yaml in
+    let files = Y.access_array ~field:"files" info_of_yaml yaml in
+    (Gh.Repo_id.{ owner; name }, files)
+
+  let index_of_yaml yaml =
+    let title = Y.access_str ~field:"title" yaml in
+    let summary = Y.access_str ~field:"summary" yaml in
+    let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
+    File.Index.v ~title ~summary ~dst ()
+
+  let output_of_yaml yaml =
+    let yaml = Y.access ~field:"output" yaml in
+    let output =
+      let owner = Y.access_str ~field:"owner" yaml in
+      let name = Y.access_str ~field:"name" yaml in
+      Gh.Repo_id.{ owner; name }
+    in
+    let branch = Y.access_str ~field:"branch" yaml in
+    (output, branch)
+
+  let from_file path =
+    let yaml = Y.parse_file path in
+    {
+      output = output_of_yaml yaml;
+      repos = Y.access_array ~field:"repos" repo_of_yaml yaml;
+      indexes = Y.access_array ~field:"indexes" index_of_yaml yaml;
+    }
+end
+
+module Reloader = struct
+  open Lwt.Infix
+
+  type conf = t
+  type t = No_context
+
+  let id = "conf-loader"
+
+  module Key = struct
+    type t = { commit : Current_git.Commit.t }
+
+    let to_json t =
+      let commit = Current_git.Commit.hash t.commit in
+      `Assoc [ ("commit", `String commit) ]
+
+    let digest t = Yojson.Safe.to_string (to_json t)
+    let pp f t = Fmt.pf f "%s" (Current_git.Commit.hash t.commit)
+  end
+
+  module Value = struct
+    type t = conf
+
+    let marshal t = Yojson.Safe.to_string (JSON.conf_to_json t)
+    let unmarshal s = JSON.conf_of_json (Yojson.Safe.from_string s)
+  end
+
+  let build No_context job { Key.commit } =
+    Current.Job.start job ~level:Current.Level.Average >>= fun () ->
+    Current_git.with_checkout ~job commit @@ fun dir ->
+    let path = Fpath.add_seg dir "tracker.yml" in
+    Yaml.from_file path |> Lwt_result.return
+
+  let pp f key = Fmt.pf f "@[<v2>Reload config for commit %a@]" Key.pp key
+  let auto_cancel = true
+end
+
+module Cache_reloader = Current_cache.Make (Reloader)
+
+let load commit =
+  Current.component "config-loader"
+  |> let> commit = commit in
+     Cache_reloader.get No_context { Reloader.Key.commit }

@@ -6,8 +6,15 @@ let init ?cwd ~job () =
   let args = [ "init" ] in
   git ?cwd ~job args
 
-let fetch ?cwd ~job remote branch =
+let fetch ?cwd ~job ?depth remote branch =
   let args = [ "fetch"; remote; branch ] in
+  let args =
+    match depth with
+    | None -> args
+    | Some depth ->
+        let depth = Format.sprintf "--depth=%d" depth in
+        args @ [ depth ]
+  in
   git ?cwd ~job args
 
 let switch ?cwd ~job branch =

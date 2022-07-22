@@ -23,6 +23,8 @@ module Index : sig
   type t
 
   val destination : t -> Fpath.t
+  val of_json : Yojson.Safe.t -> t
+  val to_json : t -> Yojson.Safe.t
   val v : title:string -> summary:string -> dst:Fpath.t -> unit -> t
   val write : t -> dir:Fpath.t -> unit Lwt.t
 end

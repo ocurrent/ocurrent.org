@@ -4,7 +4,11 @@ module Cmd = Utils.Cmd
 module Hugo = struct
   open Lwt.Infix
 
-  type t = { files : File.Copy.t list; indexes : File.Index.t list }
+  type t = {
+    files : File.Copy.t list;
+    indexes : File.Index.t list;
+    conf : Conf.t;
+  }
 
   let id = "hugo-build"
 
@@ -55,31 +59,31 @@ module Hugo = struct
     Current.Process.exec ~cwd ~job ~cancellable:true
       ("", [| "hugo"; "-d"; output; "-v" |])
 
-  let deploy_over_git ~cwd ~job src commit =
+  let deploy_over_git ~cwd ~job ~conf src commit =
     let open Lwt_result.Infix in
-    let branch = Conf.Static.output_branch in
-    let remote = Conf.Static.remote in
+    let remote, branch = Conf.github_remote conf in
+    let remote_name = Conf.Static.remote_name in
     let output = Conf.Static.hugo_output in
     let path = Fpath.add_seg src output in
     Git.init ~cwd ~job () >>= fun () ->
-    Git.remote ~cwd ~job (`Add remote) >>= fun () ->
-    Git.fetch ~cwd ~job (fst remote) branch >>= fun () ->
+    Git.remote ~cwd ~job (`Add (remote_name, remote)) >>= fun () ->
+    Git.fetch ~cwd ~job ~depth:1 remote_name branch >>= fun () ->
     Git.switch ~cwd ~job branch >>= fun () ->
     Git.rm_all ~cwd ~job () >>= fun () ->
     Cmd.copy_all ~cwd ~job path (Fpath.v ".") >>= fun () ->
     Git.add_all ~cwd ~job () >>= fun () ->
     let msg = Format.sprintf "Deploy %s" commit in
     Git.commit ~cwd ~job ~allow_empty:true msg >>= fun () ->
-    Git.push ~cwd ~job ~force:true (fst remote) branch
+    Git.push ~cwd ~job ~force:true remote branch
 
-  let build { files; indexes } job { Key.commit } =
+  let build { files; indexes; conf } job { Key.commit } =
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
     Current_git.with_checkout ~job commit @@ fun dir ->
     write_all job dir files indexes >>= fun () ->
     Lwt_result.bind (hugo ~cwd:dir job) (fun () ->
         let f cwd =
           let commit = Current_git.Commit.hash commit in
-          deploy_over_git ~cwd ~job dir commit
+          deploy_over_git ~cwd ~job ~conf dir commit
         in
         Current.Process.with_tmpdir f)
 
@@ -89,7 +93,7 @@ end
 
 module Cache_hugo = Current_cache.Make (Hugo)
 
-let build ~commit files indexes : unit Current.t =
+let build ~commit ~conf files indexes : unit Current.t =
   Current.component "build-with-hugo"
   |> let> commit = commit and> files = files in
-     Cache_hugo.get { files; indexes } { Hugo.Key.commit }
+     Cache_hugo.get { files; indexes; conf } { Hugo.Key.commit }

@@ -1,3 +1,4 @@
+open Current.Syntax
 module Gh = Current_github
 module Git = Current_git
 
@@ -30,14 +31,14 @@ let fetch_file_content selections =
   let f { repo; commit; files } = Content.fetch ~repo ~commit files in
   List.map f selections
 
-let v ~config ~github () =
-  let repos = Conf.repos config in
-  let repo, branch = Conf.base config in
-  let commit = snd (fetch_commit ~github ~repo ~branch ()) in
+let v ~repo ~branch ~github () =
+  let commit = snd (fetch_commit ~branch ~github ~repo ()) in
+  let* conf = Conf.load commit in
+  let repos = Conf.repos conf in
   let selections = fetch_selections ~github ~repos in
   let files =
     let files = fetch_file_content selections in
     Current.list_seq files |> Current.map List.flatten
   in
-  let indexes = Conf.indexes config in
-  Hugo.build ~commit files indexes
+  let indexes = Conf.indexes conf in
+  Hugo.build ~commit ~conf files indexes

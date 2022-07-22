@@ -61,6 +61,25 @@ end
 module Index = struct
   type t = { title : string; summary : string; dst : Fpath.t }
 
+  let of_json : Yojson.Safe.t -> t = function
+    | `Assoc
+        [
+          ("title", `String title);
+          ("summary", `String summary);
+          ("dst", `String dst);
+        ] ->
+        let dst = Fpath.v dst in
+        { title; summary; dst }
+    | _ -> invalid_arg "Unable to parse the JSON for Index."
+
+  let to_json t : Yojson.Safe.t =
+    `Assoc
+      [
+        ("title", `String t.title);
+        ("summary", `String t.summary);
+        ("dst", `String (Fpath.to_string t.dst));
+      ]
+
   let v ~title ~summary ~dst () =
     let dst = Fpath.normalize dst in
     { title; summary; dst }
