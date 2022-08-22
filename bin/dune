@@ -1,4 +1,6 @@
 (executable
+  (public_name watcher)
+  (package ocurrentorg)
   (name main)
   (libraries
     current_git
