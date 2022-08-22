@@ -1,0 +1,36 @@
+baseURL: "http://occurent.org"
+languageCode: "en-us"
+title: "OCurrent"
+MetaDataFormat: "yaml"
+
+markup:
+    highlight:
+        noClasses: false
+
+menu:
+    main:
+        - identifier: "blog"
+          name: "Blog"
+          title: "blog"
+          url: "/blog"
+          weight: 1
+        - identifier: "docs"
+          name: "Docs"
+          title: "docs"
+          url: "/docs"
+          weight: 2
+        - identifier: "examples"
+          name: "Examples"
+          title: "examples"
+          url: "/examples"
+          weight: 3
+        - identifier: "api"
+          name: "API"
+          title: "api"
+          url: "https://ocurrent.github.io/ocurrent/"
+          weight: 4
+        - identifer: "community"
+          name: "Community"
+          title: "community"
+          url: "/community"
+          weight: 5

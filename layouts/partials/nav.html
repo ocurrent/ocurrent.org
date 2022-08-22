@@ -1,0 +1,20 @@
+<div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >{{ .Site.Title }}</a
+        >
+    </h1>
+    <ul>
+        {{ range .Site.Menus.main }}
+        <li>
+            <a
+                href="{{ .URL }}"
+                title="{{ .Title }}"
+                >{{ .Name }}</a
+            >
+        </li>
+        {{ end }}
+    </ul>
+</div>

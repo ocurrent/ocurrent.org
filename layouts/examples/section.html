@@ -1,0 +1,19 @@
+{{ define "main" }}
+
+{{ partial "topline" . }}
+
+{{ .Content }}
+
+<h2>Details examples:</h2>
+<ul>
+    {{ range .Pages }}
+    <li>
+        <h3><a href="{{.Permalink}}">{{ .Title }}</a></h3>
+        {{ if (isset .Params "subtitle" )}}
+        <p>{{.Params.subtitle }}</p>
+        {{ end }}
+    </li>
+    {{ end }}
+</ul>
+
+{{ end }}

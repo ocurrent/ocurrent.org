@@ -1,34 +1,28 @@
-# OCurrent website
+# OCurrent.org
 
-This repository contains the source code for [ocurrent.org][ocurrent.org],
-which describes the [OCurrent workflow specification language][ocurrent] and
-contains tutorials for getting started with OCurrent.
+[OCurrent.org](https://github.com/ocurrent) is the town hall for all `OCurrent` related stuffs.
 
-### Building the website locally
+:warning: This is currently on heavy development and as a result not stable at all!
 
-The website is generated using [GatsbyJS][gatsby]. The following commands run an instance of the
-website locally:
+## Development
 
-```shell
-git clone https://github.com/ocurrent/ocurrent.org
-cd ocurrent.org
+### Dependencies
 
-yarn install    # Install build dependencies
-yarn run build  # Build the website
-yarn run serve  # Serve the build at `localhost:9000`
+To be able to develop with OCurrent, you need to have the following tools installed on your system:
+ - `hugo` (>= `0.100`)
+
+To install `hugo`, you can follow these instructions on the [gohugo.io website](https://gohugo.io/getting-started/installing/).
+
+
+### Run a development server
+
+To run a development server, you can run this command and go to [localhost:1313](http://localhost:1313)
+to see the result:
+ ```
+ hugo server -v
+ ```
+ 
+ To build the page as a static website, you can execute this command the website will be built into `./public`:
 ```
-
-When working on the website, an incremental development server can be run with `yarn run develop`,
-but beware that this may show stale artefacts.
-
-### Running tests/linting
-
-- The source code is formatted with [Prettier][prettier].
-- Any incorrectly formatted code will be reported by `yarn run lint`.
-- Use `yarn run format` to apply the changes.
-
-[ocurrent]: https://github.com/ocurrent/ocurrent/
-[ocurrent.org]: https://ocurrent.org/
-[prettier]: https://github.com/prettier/prettier/
-[gatsby]: https://www.gatsbyjs.org/
-
+hugo --minify -d "./public"
+```
