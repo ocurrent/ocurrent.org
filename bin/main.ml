@@ -18,6 +18,7 @@ let webhook_route ~engine ~has_role ~webhook_secret =
 
 let main () config mode repo branch token webhook_secret =
   let token = String.trim (read_file token) in
+  let webhook_secret = String.trim (read_file webhook_secret) in
   let github = Gh.Api.of_oauth ~token ~webhook_secret in
   let engine =
     Current.Engine.create ~config (Pipeline.v ~repo ~branch ~github)
