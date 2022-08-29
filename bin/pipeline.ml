@@ -30,15 +30,23 @@ let fetch_file_content selections =
   let f { repo; commit; files } = Content.fetch ~repo ~commit files in
   List.map f selections
 
-let v ~repo ~branch ~github () =
-  let commit = snd (fetch_commit ~branch ~github ~repo ()) in
-  Current.component "selection files"
-  |> let** conf = Conf.load commit in
-     let repos = Conf.repos conf in
-     let selections = fetch_selections ~github ~repos in
-     let files =
-       let files = fetch_file_content selections in
-       Current.list_seq files |> Current.map List.flatten
-     in
-     let indexes = Conf.indexes conf in
-     Hugo.build ~commit ~conf files indexes
+let v ~branch ~app () =
+  Gh.App.installations app
+  |> Current.list_iter ~collapse_key:"org" (module Gh.Installation)
+     @@ fun installation ->
+     let github = Current.map Gh.Installation.api installation in
+     Gh.Installation.repositories installation
+     |> Current.list_iter ~collapse_key:"monitor" (module Gh.Api.Repo)
+        @@ fun repo ->
+        let* repo = Current.map Gh.Api.Repo.id repo and* github = github in
+        let commit = snd (fetch_commit ~branch ~github ~repo ()) in
+        Current.component "Get selection files"
+        |> let** conf = Conf.load commit in
+           let repos = Conf.repos conf in
+           let selections = fetch_selections ~github ~repos in
+           let files =
+             let files = fetch_file_content selections in
+             Current.list_seq files |> Current.map List.flatten
+           in
+           let indexes = Conf.indexes conf in
+           Hugo.build ~commit ~conf files indexes
