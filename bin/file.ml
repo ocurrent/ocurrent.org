@@ -76,7 +76,7 @@ module Index = struct
     `Assoc
       [
         ("title", `String t.title);
-        ("summary", `String t.description);
+        ("description", `String t.description);
         ("dst", `String (Fpath.to_string t.dst));
       ]
 

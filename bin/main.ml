@@ -3,31 +3,38 @@ module Gh = Current_github
 let setup_log default_level = Prometheus_unix.Logging.init ?default_level ()
 let program_name = "pipeline"
 
-let read_file path =
-  let ch = open_in_bin path in
-  Fun.protect
-    (fun () ->
-      let len = in_channel_length ch in
-      really_input_string ch len)
-    ~finally:(fun () -> close_in ch)
+let has_role user = function
+  | `Viewer | `Monitor -> true
+  | `Builder | `Admin -> (
+      match Option.map Current_web.User.id user with
+      | Some ("github:maiste" | "github:tmcgilchrist") -> true
+      | _ -> false)
 
 let webhook_route ~engine ~has_role ~webhook_secret =
   Routes.(
     (s "webhooks" / s "github" /? nil)
-    @--> Current_github.webhook ~engine ~has_role ~webhook_secret)
+    @--> Gh.webhook ~engine ~has_role ~webhook_secret)
 
-let main () config mode repo branch token webhook_secret =
-  let token = String.trim (read_file token) in
-  let webhook_secret = String.trim (read_file webhook_secret) in
-  let github = Gh.Api.of_oauth ~token ~webhook_secret in
-  let engine =
-    Current.Engine.create ~config (Pipeline.v ~repo ~branch ~github)
+let login_route github_auth =
+  Routes.((s "login" /? nil) @--> Gh.Auth.login github_auth)
+
+let main () config mode branch app github_auth =
+  let authn = Option.map Gh.Auth.make_login_uri github_auth in
+  let has_role =
+    if github_auth = None then Current_web.Site.allow_all else has_role
   in
-  let has_role = Current_web.Site.allow_all in
+  let secure_cookies = github_auth <> None in
+  let webhook_secret = String.trim (Gh.App.webhook_secret app) in
+  let engine = Current.Engine.create ~config (Pipeline.v ~branch ~app) in
   let routes =
-    webhook_route ~engine ~has_role ~webhook_secret :: Current_web.routes engine
+    webhook_route ~engine ~has_role ~webhook_secret
+    :: login_route github_auth
+    :: Current_web.routes engine
   in
-  let site = Current_web.Site.(v ~has_role ~name:program_name routes) in
+  let site =
+    Current_web.Site.(
+      v ?authn ~has_role ~secure_cookies ~name:program_name routes)
+  in
   Lwt_main.run
     (Lwt.choose [ Current.Engine.thread engine; Current_web.run ~mode site ])
 
@@ -36,23 +43,6 @@ open Cmdliner
 let setup_log =
   let docs = Manpage.s_common_options in
   Term.(const setup_log $ Logs_cli.level ~docs ())
-
-let token =
-  Arg.required
-  @@ Arg.opt Arg.(some file) None
-  @@ Arg.info ~doc:"Token path" ~docv:"PATH" [ "github-token-file"; "t" ]
-
-let webhook_secret =
-  Arg.required
-  @@ Arg.opt Arg.(some file) None
-  @@ Arg.info ~doc:"Webhook secret path" ~docv:"PATH"
-       [ "github-webhook-secret-file"; "w" ]
-
-let repo =
-  Arg.required
-  @@ Arg.opt Arg.(some Current_github.Repo_id.cmdliner) None
-  @@ Arg.info ~doc:"The base repository to build the config from."
-       ~docv:"REPO/OWNER" [ "repo"; "r" ]
 
 let branch =
   Arg.required
@@ -69,9 +59,8 @@ let cmd =
         $ setup_log
         $ Current.Config.cmdliner
         $ Current_web.cmdliner
-        $ repo
         $ branch
-        $ token
-        $ webhook_secret))
+        $ Gh.App.cmdliner
+        $ Gh.Auth.cmdliner))
 
 let () = Cmd.(exit @@ eval cmd)
