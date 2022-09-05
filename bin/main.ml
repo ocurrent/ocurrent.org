@@ -1,13 +1,17 @@
 module Gh = Current_github
 
-let setup_log default_level = Prometheus_unix.Logging.init ?default_level ()
+let setup_log style_renderer default_level =
+  Fmt_tty.setup_std_outputs ?style_renderer ();
+  Prometheus_unix.Logging.init ?default_level ()
+
 let program_name = "pipeline"
 
 let has_role user = function
   | `Viewer | `Monitor -> true
   | `Builder | `Admin -> (
       match Option.map Current_web.User.id user with
-      | Some ("github:maiste" | "github:tmcgilchrist") -> true
+      | Some ("github:maiste" | "github:tmcgilchrist" | "github:MisterDA ") ->
+          true
       | _ -> false)
 
 let webhook_route ~engine ~has_role ~webhook_secret =
@@ -42,7 +46,7 @@ open Cmdliner
 
 let setup_log =
   let docs = Manpage.s_common_options in
-  Term.(const setup_log $ Logs_cli.level ~docs ())
+  Term.(const setup_log $ Fmt_cli.style_renderer () $ Logs_cli.level ~docs ())
 
 let branch =
   Arg.required

@@ -41,11 +41,11 @@ module Copy = struct
   let format_with_header file =
     [
       "---";
-      Format.sprintf "title: %s" file.metadata.title;
-      Format.sprintf "summary: %s"
+      Printf.sprintf "title: %s" file.metadata.title;
+      Printf.sprintf "summary: %s"
         (if file.metadata.summary = "" then "no summary"
         else file.metadata.title);
-      Format.sprintf "authors: %s" (String.concat ", " file.metadata.authors);
+      Printf.sprintf "authors: %s" (String.concat ", " file.metadata.authors);
       "---";
     ]
     @ file.content
@@ -92,8 +92,8 @@ module Index = struct
     let page =
       [
         "---";
-        Format.sprintf "title: %s" index.title;
-        Format.sprintf "description: %s" index.description;
+        Printf.sprintf "title: %s" index.title;
+        Printf.sprintf "description: %s" index.description;
         "---";
       ]
     in

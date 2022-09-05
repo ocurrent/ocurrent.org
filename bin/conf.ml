@@ -39,7 +39,7 @@ module JSON = struct
       let name =
         Current_github.Repo_id.(
           let { owner; name } = repo_id in
-          Format.sprintf "%s/%s" owner name)
+          Printf.sprintf "%s/%s" owner name)
       in
       let files = `List (List.map File.Copy.info_to_yojson files) in
       `Assoc [ (name, files) ]
@@ -57,8 +57,10 @@ module JSON = struct
                   "Corrupted data - repo/f/repo_id: this is not supposed to \
                    happen."
           in
-          let files = List.map File.Copy.info_of_yojson files in
-          let files = List.map Result.get_ok files in
+          let files =
+            let f file = File.Copy.info_of_yojson file |> Result.get_ok in
+            List.map f files
+          in
           (repo_id, files)
       | _ -> failwith "Corrupted data - repo/f: this is not supposed to happen."
     in
@@ -91,7 +93,7 @@ let github_remote conf =
   let { Current_github.Repo_id.owner; Current_github.Repo_id.name }, branch =
     conf.output
   in
-  let url = Format.sprintf "git@github.com:%s/%s.git" owner name in
+  let url = Printf.sprintf "git@github.com:%s/%s.git" owner name in
   (url, branch)
 
 module Static = struct

@@ -2,10 +2,8 @@
 (generate_opam_files true)
 
 (name ocurrentorg)
-(version 0.1.0)
 
 (package
-  (allow_empty)
   (name ocurrentorg)
   (source (github ocurrent/ocurrent.org))
   (license ISC)

@@ -7,7 +7,7 @@ module Cmd : sig
     job:Current.Job.t ->
     Fpath.t ->
     Fpath.t ->
-    (unit, Rresult.R.msg) Lwt_result.t
+    unit Current.or_error Lwt.t
   (** [copy_all ~cwd ~job src dst] executes a [cp -a src/* dst/] from [cwd].
       [job] is a reference to an {!Current.t} job with whom the action is linked
       to. *)

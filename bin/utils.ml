@@ -1,20 +1,12 @@
-open Lwt_result.Syntax
-
 module Cmd = struct
   let copy ?cwd ~job args =
     let args = "cp" :: args in
     Current.Process.exec ?cwd ~job ~cancellable:true ("cp", Array.of_list args)
 
   let copy_all ?cwd ~job src dst =
-    let* srcs =
-      match Bos.OS.Dir.contents src with
-      | Ok l ->
-          let l = List.map Fpath.to_string l in
-          Lwt_result.return l
-      | Error e -> Lwt_result.fail e
-    in
-    let dst = [ Fpath.to_string dst ] in
-    let args = "-a" :: (srcs @ dst) in
+    let src = Fpath.add_seg src "." |> Fpath.to_string in
+    let dst = Fpath.to_string dst in
+    let args = [ "-ra"; src; dst ] in
     copy ?cwd ~job args
 end
 
