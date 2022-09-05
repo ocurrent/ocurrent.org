@@ -20,11 +20,11 @@ let fetch_commit ?branch ~github ~repo () =
   (repo.name, Git.fetch commit_id)
 
 let fetch_selections ~github ~repos =
-  let f selections (repo, files) =
+  let f (repo, files) =
     let repo, commit = fetch_commit ~github ~repo () in
-    { repo; commit; files } :: selections
+    { repo; commit; files }
   in
-  List.fold_left f [] repos
+  List.map f repos
 
 let fetch_file_content selections =
   let f { repo; commit; files } = Content.fetch ~repo ~commit files in

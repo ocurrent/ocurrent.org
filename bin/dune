@@ -1,16 +1,18 @@
 (executable
-  (public_name watcher)
-  (package ocurrentorg)
-  (name main)
-  (libraries
-    current_git
-    current_github
-    current_web
-    current_docker
-    cmdliner
-    logs.cli
-    prometheus-app.unix
-    yaml
-    yojson
-    ppx_deriving_yojson.runtime)
-  (preprocess (pps ppx_deriving_yojson)))
+ (public_name watcher)
+ (package ocurrentorg)
+ (name main)
+ (libraries
+  current_git
+  current_github
+  current_web
+  current_docker
+  cmdliner
+  fmt.cli
+  logs.cli
+  prometheus-app.unix
+  yaml
+  yojson
+  ppx_deriving_yojson.runtime)
+ (preprocess
+  (pps ppx_deriving_yojson)))

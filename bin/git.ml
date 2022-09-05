@@ -12,7 +12,7 @@ let fetch ?cwd ~job ?depth remote branch =
     match depth with
     | None -> args
     | Some depth ->
-        let depth = Format.sprintf "--depth=%d" depth in
+        let depth = Printf.sprintf "--depth=%d" depth in
         args @ [ depth ]
   in
   git ?cwd ~job args

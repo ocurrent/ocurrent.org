@@ -31,12 +31,12 @@ module Hugo = struct
     Logs.debug (fun log -> log "Check  folder [%s]" (Fpath.to_string dir));
     match Bos.OS.Dir.create dir with
     | Ok true ->
-        Logs.debug (fun log -> log "Create folder [%s]" (Fpath.to_string dir));
-        Current.Job.log job "Create path (%s) in tmp dir." (Fpath.to_string dir)
+        Logs.debug (fun log -> log "Create folder [%a]" Fpath.pp dir);
+        Current.Job.log job "Create path (%a) in tmp dir." Fpath.pp dir
     | Ok false ->
-        Logs.debug (fun log -> log "Ignore folder [%s]" (Fpath.to_string dir));
-        Current.Job.log job "Ignore path (%s) because it already exists."
-          (Fpath.to_string dir)
+        Logs.debug (fun log -> log "Ignore folder [%a]" Fpath.pp dir);
+        Current.Job.log job "Ignore path (%a) because it already exists."
+          Fpath.pp dir
     | Error (`Msg msg) -> failwith msg
 
   let write_all job dir files indexes =
@@ -73,7 +73,7 @@ module Hugo = struct
     Git.rm_all ~cwd ~job () >>= fun () ->
     Cmd.copy_all ~cwd ~job path (Fpath.v ".") >>= fun () ->
     Git.add_all ~cwd ~job () >>= fun () ->
-    let msg = Format.sprintf "Deploy %s" commit in
+    let msg = Printf.sprintf "Deploy %s" commit in
     Git.commit ~cwd ~job ~allow_empty:true msg >>= fun () ->
     Git.push ~cwd ~job ~force:true remote branch
 
@@ -105,7 +105,7 @@ let digest files indexes =
   in
   let to_digest = String.concat "," (files @ indexes) in
   let digest = Digest.string to_digest |> Digest.to_hex in
-  Logs.info (fun l -> l "Digest file to get hash: %s" digest);
+  Logs.info (fun l -> l "File digest: %s" digest);
   digest
 
 let build ~commit ~conf files indexes : unit Current.t =

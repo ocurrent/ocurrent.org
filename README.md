@@ -51,10 +51,10 @@ You need to generate a `private key` for the client and store it somewhere. Fina
 
 #### Step 2
 
-You need to have an ssh key on the server where the pipeline is deployed. Otherwise, you can create on by followning [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
+You need to have an ssh key on the server where the pipeline is deployed. Otherwise, you can create one by followning [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 Then you should go to the repository where your code will be pushed and add a deploy key (an ssh key only related to this repository). To do so, go to `https://github.com/USER/REPO/settings/keys`.
 
-Now, we are ready to run our pipeline
+Now, we are ready to run our pipeline.
 
 #### Step 3
 
