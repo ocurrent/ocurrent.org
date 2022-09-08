@@ -1,0 +1,18 @@
+output:
+  owner: "ocurrent"
+  name: "ocurrent.github.io"
+  branch: "main"
+repos:
+  - owner: "ocurrent"
+    name: "ocurrent"
+    files:
+      - title: "Index"
+        summary: "Main page of the ocurrent documentation"
+        src: "doc/index.md"
+        dst: "content/docs/ocurrent/ocurrent.md"
+        authors:
+          - "The OCurrent Team"
+indexes:
+  - title: "OCurrent Index"
+    description: "List of occurent documentation"
+    dst: "content/docs/ocurrent/"
