@@ -1,4 +1,5 @@
-baseURL: "http://occurent.org"
+
+baseURL: "https://www.ocurrent.org/"
 languageCode: "en-us"
 title: "OCurrent"
 MetaDataFormat: "yaml"
@@ -27,7 +28,7 @@ menu:
         - identifier: "api"
           name: "API"
           title: "api"
-          url: "https://ocurrent.github.io/ocurrent/"
+          url: "/ocurrent"
           weight: 4
         - identifer: "community"
           name: "Community"

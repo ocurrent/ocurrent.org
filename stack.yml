@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  ocurrentorg-watcher:
+    image: ocurrent/watcher:latest
+    command: --github-account-allowlist="maiste" --github-app-id="232762"  --github-private-key-file="/run/secrets/ocurrentorg-key" --github-webhook-secret-file="/run/secrets/ocurrentorg-secret" --branch=live-engine -v
+    ports:
+      - "8090:8080"
+    secrets:
+      - "ocurrentorg-key"
+      - "ocurrentorg-secret"
+      - source: "ocurrentorg-ssh"
+        mode: 0600
+
+secrets:
+  ocurrentorg-key:
+    external: true
+  ocurrentorg-secret:
+    external: true
+  ocurrentorg-ssh:
+    external: true
+

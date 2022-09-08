@@ -3,5 +3,7 @@ public/
 node_modules/
 
 .#*
-
 .hugo_build.lock
+
+_build
+_opam
