@@ -55,12 +55,12 @@ module Content = struct
           log "Docs reader: extracting content from %s/%s" repo
             (File.Copy.source file))
     in
-    let f acc file =
+    let f file =
       let+ file = File.Copy.read ~dir file in
       logs repo file;
-      file :: acc
+      file
     in
-    Lwt_list.fold_left_s f [] files
+    Lwt_list.map_s f files
 
   let build files job { Key.commit; Key.repo; _ } =
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
@@ -73,6 +73,8 @@ end
 
 module Cache_docs = Current_cache.Make (Content)
 
+let weekly = Current_cache.Schedule.v ~valid_for:(Duration.of_day 7) ()
+
 let fetch ~repo ~commit files =
   Current.component "fetch-doc"
   |> let> commit = commit in
@@ -81,7 +83,7 @@ let fetch ~repo ~commit files =
        List.map f files |> String.concat "," |> Digest.string |> Digest.to_hex
      in
      let cache : File.Copy.t list Current.Primitive.t =
-       Cache_docs.get files
+       Cache_docs.get ~schedule:weekly files
          { Content.Key.repo; Content.Key.commit; Content.Key.digest }
      in
      cache
