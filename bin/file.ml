@@ -6,6 +6,8 @@ module Writer = struct
 end
 
 module Copy = struct
+  let tz_of_date_time = Timedesc.Time_zone.make_exn "Europe/Paris"
+
   type info = {
     title : string;
     summary : string;
@@ -21,7 +23,7 @@ module Copy = struct
   open Lwt.Syntax
 
   let v ~title ?(summary = "") ~src ~dst ~authors () =
-    let date = Timedesc.(now () |> date |> Date.to_rfc3339) in
+    let date = Timedesc.(now ~tz_of_date_time () |> date |> Date.to_rfc3339) in
     let src = Fpath.normalize src |> Fpath.to_string in
     let dst = Fpath.normalize dst |> Fpath.to_string in
     { title; summary; src; dst; authors; date }
