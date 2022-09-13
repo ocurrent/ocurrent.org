@@ -21,6 +21,7 @@
     (current_web (>= 0.6.2))
     (yaml (>= 3.1.0))
     (bos (>= 0.2.1))
+    (timedesc (= 0.9.0))
     yojson
     ppx_deriving_yojson
     (prometheus-app (>= 1.2))
