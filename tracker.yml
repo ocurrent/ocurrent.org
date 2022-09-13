@@ -6,13 +6,31 @@ repos:
   - owner: "ocurrent"
     name: "ocurrent"
     files:
-      - title: "Index"
-        summary: "Main page of the ocurrent documentation"
-        src: "doc/index.md"
-        dst: "content/docs/ocurrent/ocurrent.md"
+      - title: "Example pipelines"
+        summary: "Some example pipelines in OCurrent"
+        src: "doc/example_pipelines.md"
+        dst: "content/docs/ocurrent/example_pipelines.md"
+        authors:
+          - "The OCurrent Team"
+      - title: "Internal overview"
+        summary: "How OCurrent work under the hood"
+        src: "doc/internals.md"
+        dst: "content/docs/ocurrent/internals.md"
+        authors:
+          - "The OCurrent Team"
+      - title: "Write your own plugin"
+        summary: "How to write your own plugin in OCurrent"
+        src: "doc/writing_plugins.md"
+        dst: "content/docs/ocurrent/writing_plugins.md"
+        authors:
+          - "The OCurrent Team"
+      - title: "The build cache"
+        summary: "How the build cache is stored"
+        src: "doc/disk_cache.md"
+        dst: "content/docs/ocurrent/disk_cache.md"
         authors:
           - "The OCurrent Team"
 indexes:
-  - title: "OCurrent Index"
-    description: "List of occurent documentation"
+  - title: "OCurrent"
+    description: "List of OCurrent documents"
     dst: "content/docs/ocurrent/"
