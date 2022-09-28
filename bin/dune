@@ -11,6 +11,7 @@
   fmt.cli
   logs.cli
   prometheus-app.unix
+  timedesc
   yaml
   yojson
   ppx_deriving_yojson.runtime)

@@ -6,12 +6,15 @@ module Writer = struct
 end
 
 module Copy = struct
+  let tz_of_date_time = Timedesc.Time_zone.make_exn "Europe/Paris"
+
   type info = {
     title : string;
     summary : string;
     src : string;
     dst : string;
     authors : string list;
+    date : string;
   }
   [@@deriving yojson]
 
@@ -20,9 +23,10 @@ module Copy = struct
   open Lwt.Syntax
 
   let v ~title ?(summary = "") ~src ~dst ~authors () =
+    let date = Timedesc.(now ~tz_of_date_time () |> date |> Date.to_rfc3339) in
     let src = Fpath.normalize src |> Fpath.to_string in
     let dst = Fpath.normalize dst |> Fpath.to_string in
-    { title; summary; src; dst; authors }
+    { title; summary; src; dst; authors; date }
 
   let compare t1 t2 = String.compare t1.metadata.title t2.metadata.title
   let source t = t.metadata.src
@@ -46,6 +50,7 @@ module Copy = struct
         (if file.metadata.summary = "" then "no summary"
         else file.metadata.title);
       Printf.sprintf "authors: %s" (String.concat ", " file.metadata.authors);
+      Printf.sprintf "date: %s" file.metadata.date;
       "---";
     ]
     @ file.content
