@@ -6,6 +6,8 @@ module Writer = struct
 end
 
 module Copy = struct
+  open Lwt.Syntax
+
   let tz_of_date_time = Timedesc.Time_zone.make_exn "Europe/Paris"
 
   type info = {
@@ -20,12 +22,10 @@ module Copy = struct
 
   type t = { metadata : info; content : string list } [@@deriving yojson]
 
-  open Lwt.Syntax
-
   let v ~title ?(summary = "") ~src ~dst ~authors () =
     let date = Timedesc.(now ~tz_of_date_time () |> date |> Date.to_rfc3339) in
-    let src = Fpath.normalize src |> Fpath.to_string in
-    let dst = Fpath.normalize dst |> Fpath.to_string in
+    let src = Fpath.(normalize src |> to_string) in
+    let dst = Fpath.(normalize dst |> to_string) in
     { title; summary; src; dst; authors; date }
 
   let compare t1 t2 = String.compare t1.metadata.title t2.metadata.title
@@ -38,7 +38,7 @@ module Copy = struct
         Lwt_io.read_lines input |> Lwt_stream.to_list)
 
   let read metadata ~dir =
-    let path = Fpath.append dir (Fpath.v metadata.src) in
+    let path = Fpath.(append dir (v metadata.src)) in
     let+ content = fetch_from path in
     { metadata; content }
 
@@ -56,9 +56,7 @@ module Copy = struct
     @ file.content
 
   let write file ~dir =
-    let path =
-      Fpath.append dir (Fpath.v file.metadata.dst) |> Fpath.to_string
-    in
+    let path = Fpath.(append dir (v file.metadata.dst) |> to_string) in
     let page = format_with_header file in
     Writer.raw_write ~path page
 end
@@ -85,7 +83,7 @@ module Index = struct
         ("dst", `String (Fpath.to_string t.dst));
       ]
 
-  let v ~title ~description ~dst () =
+  let v ~title ~description ~dst =
     let dst = Fpath.normalize dst in
     { title; description; dst }
 
@@ -93,7 +91,7 @@ module Index = struct
 
   let write index ~dir =
     let path = Fpath.add_seg index.dst "_index.md" in
-    let path = Fpath.append dir path |> Fpath.to_string in
+    let path = Fpath.(append dir path |> to_string) in
     let page =
       [
         "---";
