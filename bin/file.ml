@@ -102,3 +102,67 @@ module Index = struct
     in
     Writer.raw_write ~path page
 end
+
+module Data = struct
+  open Lwt.Syntax
+
+  type info = { src : Fpath.t; dst : Fpath.t }
+  type t = { metadata : info; store_at : Fpath.t }
+
+  let source store = store.metadata.src |> Fpath.to_string
+  let destination store = store.metadata.dst |> Fpath.to_string
+
+  let info_of_json : Yojson.Safe.t -> info = function
+    | `Assoc [ ("src", `String src); ("dst", `String dst) ] ->
+        let src = Fpath.v src in
+        let dst = Fpath.v dst in
+        { src; dst }
+    | _ -> invalid_arg "Unable to parse the JSON for Data.info."
+
+  let of_json = function
+    | `Assoc
+        [
+          ("src", `String src);
+          ("dst", `String dst);
+          ("store_at", `String store_at);
+        ] ->
+        let src = Fpath.v src in
+        let dst = Fpath.v dst in
+        let store_at = Fpath.v store_at in
+        { metadata = { src; dst }; store_at }
+    | _ -> invalid_arg "Unable to parse the JSON for Data.t."
+
+  let info_to_json t : Yojson.Safe.t =
+    `Assoc
+      [
+        ("src", `String (Fpath.to_string t.src));
+        ("dst", `String (Fpath.to_string t.dst));
+      ]
+
+  let to_json t =
+    `Assoc
+      [
+        ("src", `String (Fpath.to_string t.metadata.src));
+        ("dst", `String (Fpath.to_string t.metadata.dst));
+        ("store_at", `String (Fpath.to_string t.store_at));
+      ]
+
+  let v ~src ~dst =
+    let src = Fpath.normalize src in
+    let dst = Fpath.normalize dst in
+    { src; dst }
+
+  let compare t1 t2 = Fpath.compare t1.store_at t2.store_at
+
+  let store info ~tmp_dir ~dir =
+    let name = Fpath.(normalize info.src |> basename) in
+    let store_at = Fpath.add_seg tmp_dir name in
+    let store = { metadata = info; store_at } in
+    let src = Fpath.(append dir info.src) in
+    let+ () = Utils.Cmd.move src store_at in
+    store
+
+  let export store ~dir =
+    let dst = Fpath.(append dir store.metadata.dst) in
+    Utils.Cmd.move store.store_at dst
+end
