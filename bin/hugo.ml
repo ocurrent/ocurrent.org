@@ -7,6 +7,7 @@ module Hugo = struct
   type t = {
     files : File.Copy.t list;
     indexes : File.Index.t list;
+    data : File.Data.t list;
     conf : Conf.t;
   }
 
@@ -39,7 +40,7 @@ module Hugo = struct
           Fpath.pp dir
     | Error (`Msg msg) -> failwith msg
 
-  let write_all job dir files indexes =
+  let write_all job dir files indexes data =
     let f file =
       let path = Fpath.append dir (Fpath.v (File.Copy.destination file)) in
       folder_generator job path;
@@ -53,7 +54,14 @@ module Hugo = struct
       Current.Job.log job "Create index [%s]" (Fpath.to_string path);
       File.Index.write index ~dir
     in
-    Lwt_list.iter_s i indexes
+    Lwt_list.iter_s i indexes >>= fun () ->
+    let d data =
+      let path = Fpath.append dir (Fpath.v (File.Data.destination data)) in
+      folder_generator job path;
+      Current.Job.log job "Create data [%s]" (Fpath.to_string path);
+      File.Data.export data ~dir
+    in
+    Content.with_close_store (fun () -> Lwt_list.iter_s d data)
 
   let hugo ~cwd job =
     let output = Conf.Static.hugo_output in
@@ -77,10 +85,10 @@ module Hugo = struct
     Git.commit ~cwd ~job ~allow_empty:true msg >>= fun () ->
     Git.push ~cwd ~job ~force:true remote branch
 
-  let build { files; indexes; conf } job { Key.commit; _ } =
+  let build { files; indexes; conf; data } job { Key.commit; _ } =
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
     Current_git.with_checkout ~job commit @@ fun dir ->
-    write_all job dir files indexes >>= fun () ->
+    write_all job dir files indexes data >>= fun () ->
     Lwt_result.bind (hugo ~cwd:dir job) (fun () ->
         let f cwd =
           let commit = Current_git.Commit.hash commit in
@@ -108,9 +116,10 @@ let digest files indexes =
   Logs.info (fun l -> l "File digest: %s" digest);
   digest
 
-let build ~commit ~conf files indexes : unit Current.t =
+let build ~commit ~conf files indexes data : unit Current.t =
   Current.component "build-with-hugo"
-  |> let> commit = commit and> files = files in
+  |> let> commit = commit and> files = files and> data = data in
      let digest = digest files indexes in
-     Cache_hugo.get { files; indexes; conf }
+     Cache_hugo.get
+       { files; indexes; conf; data }
        { Hugo.Key.commit; Hugo.Key.digest }
