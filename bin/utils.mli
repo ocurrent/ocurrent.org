@@ -11,6 +11,19 @@ module Cmd : sig
   (** [copy_all ~cwd ~job src dst] executes a [cp -a src/* dst/] from [cwd].
       [job] is a reference to an {!Current.t} job with whom the action is linked
       to. *)
+
+  val move : Fpath.t -> Fpath.t -> unit Lwt.t
+  (** [move src dst] executes a [mv src dst/] from [cwd]. *)
+end
+
+module Dir : sig
+  (** This module gives helpers to manipulate directory. *)
+
+  val ensure : Fpath.t -> unit Lwt.t
+  (** [ensure dir] creates a new directory if it doesn't already exist. *)
+
+  val delete : Fpath.t -> unit Lwt.t
+  (** [delete dir] deletes the directory if it already exist. *)
 end
 
 module Yaml : sig
@@ -53,7 +66,8 @@ module Yaml : sig
       ]}
 
       where [access_array ~field:"book" ~f yaml] will return an object in the
-      format required by the [f] function. *)
+      format required by the [f] function. It returns an empty list in case the
+      field can't be found. *)
 
   val access_str_array : field:string -> Yaml.value -> string list
   (** [access_str_array ~field yaml] is the same as {!access_array} but with a
