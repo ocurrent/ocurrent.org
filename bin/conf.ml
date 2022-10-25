@@ -3,7 +3,7 @@ module Gh = Current_github
 
 type t = {
   output : Gh.Repo_id.t * string;
-  repos : (Gh.Repo_id.t * File.Copy.info list) list;
+  repos : (Gh.Repo_id.t * File.Copy.info list * File.Data.info list) list;
   indexes : File.Index.t list;
 }
 
@@ -34,21 +34,25 @@ module JSON = struct
         (Current_github.Repo_id.{ owner; name }, branch)
     | _ -> failwith "Corrupted data / output: this is not supposed to happen."
 
-  let repo_to_json repos =
-    let f (repo_id, files) =
+  let repo_to_json repos : Yojson.Safe.t =
+    let f (repo_id, files, data) : Yojson.Safe.t =
       let name =
         Current_github.Repo_id.(
           let { owner; name } = repo_id in
           Printf.sprintf "%s/%s" owner name)
       in
-      let files = `List (List.map File.Copy.info_to_yojson files) in
-      `Assoc [ (name, files) ]
+      let files : Yojson.Safe.t =
+        `List (List.map File.Copy.info_to_yojson files)
+      in
+      let data : Yojson.Safe.t = `List (List.map File.Data.info_to_json data) in
+      `Assoc [ (name, `Assoc [ ("files", files); ("data", data) ]) ]
     in
     `List (List.map f repos)
 
   let repo_of_json json =
     let f = function
-      | `Assoc [ (name, `List files) ] ->
+      | `Assoc
+          [ (name, `Assoc [ ("files", `List files); ("data", `List data) ]) ] ->
           let repo_id =
             match String.split_on_char '/' name with
             | [ owner; name ] -> Current_github.Repo_id.{ owner; name }
@@ -61,7 +65,8 @@ module JSON = struct
             let f file = File.Copy.info_of_yojson file |> Result.get_ok in
             List.map f files
           in
-          (repo_id, files)
+          let data = List.map File.Data.info_of_json data in
+          (repo_id, files, data)
       | _ -> failwith "Corrupted data - repo/f: this is not supposed to happen."
     in
     match json with
@@ -75,9 +80,9 @@ module JSON = struct
     | _ -> failwith "Corrupted data / index: this is not supposed to happen."
 
   let conf_to_json t =
-    let output = output_to_json t.output in
-    let repos = repo_to_json t.repos in
-    let indexes = index_to_json t.indexes in
+    let output : Yojson.Safe.t = output_to_json t.output in
+    let repos : Yojson.Safe.t = repo_to_json t.repos in
+    let indexes : Yojson.Safe.t = index_to_json t.indexes in
     `Assoc [ ("output", output); ("repos", repos); ("indexes", indexes) ]
 
   let conf_of_json : Yojson.Safe.t -> t = function
@@ -104,7 +109,7 @@ end
 module Yaml = struct
   module Y = Utils.Yaml
 
-  let info_of_yaml yaml =
+  let file_info_of_yaml yaml =
     let title = Y.access_str ~field:"title" yaml in
     let summary = Y.access_str ~field:"summary" yaml in
     let authors = Y.access_str_array ~field:"authors" yaml in
@@ -112,11 +117,17 @@ module Yaml = struct
     let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
     File.Copy.v ~title ~summary ~authors ~src ~dst ()
 
+  let data_info_of_yaml yaml =
+    let src = Fpath.v (Y.access_str ~field:"src" yaml) in
+    let dst = Fpath.v (Y.access_str ~field:"dst" yaml) in
+    File.Data.v ~src ~dst
+
   let repo_of_yaml yaml =
     let owner = Y.access_str ~field:"owner" yaml in
     let name = Y.access_str ~field:"name" yaml in
-    let files = Y.access_array ~field:"files" info_of_yaml yaml in
-    (Gh.Repo_id.{ owner; name }, files)
+    let files = Y.access_array ~field:"files" file_info_of_yaml yaml in
+    let data = Y.access_array ~field:"data" data_info_of_yaml yaml in
+    (Gh.Repo_id.{ owner; name }, files, data)
 
   let index_of_yaml yaml =
     let title = Y.access_str ~field:"title" yaml in
@@ -180,6 +191,18 @@ module Reloader = struct
 end
 
 module Cache_reloader = Current_cache.Make (Reloader)
+
+let lint ?(test = false) file =
+  try
+    let conf = Yaml.from_file file in
+    if test then ignore (JSON.conf_to_json conf |> JSON.conf_of_json);
+    (* Ensure the functions are inverse functions that validate f (f^-1(x)) = x. *)
+    Result.ok ()
+  with Invalid_argument s ->
+    let msg =
+      Printf.sprintf "The execution stops because of an invalid argument: %s" s
+    in
+    Result.error (`Msg msg)
 
 let load commit =
   Current.component "config-loader"
