@@ -27,11 +27,11 @@ let remote ?cwd ~job = function
       git ?cwd ~job args
 
 let add_all ?cwd ~job () =
-  let args = [ "add"; "--all" ] in
+  let args = [ "add"; "." ] in
   git ?cwd ~job args
 
 let rm_all ?cwd ~job () =
-  let args = [ "rm"; "--ignore-unmatch"; "'*'" ] in
+  let args = [ "rm"; "-rf"; "*" ] in
   git ?cwd ~job args
 
 let commit ?cwd ~job ?(allow_empty = false) msg =

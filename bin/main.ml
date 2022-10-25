@@ -22,6 +22,13 @@ let webhook_route ~engine ~has_role ~webhook_secret =
 let login_route github_auth =
   Routes.((s "login" /? nil) @--> Gh.Auth.login github_auth)
 
+let lint () file test =
+  let path = Fpath.v file in
+  Result.map
+    (fun () ->
+      Fmt.(pr "[%a]: %s is correct.\n%!" (styled `Green string) "OK" file))
+    (Conf.lint ~test path)
+
 let main () config mode branch app github_auth =
   let authn = Option.map Gh.Auth.make_login_uri github_auth in
   let has_role =
@@ -44,27 +51,48 @@ let main () config mode branch app github_auth =
 
 open Cmdliner
 
-let setup_log =
+let setup_log_t =
   let docs = Manpage.s_common_options in
   Term.(const setup_log $ Fmt_cli.style_renderer () $ Logs_cli.level ~docs ())
 
-let branch =
-  Arg.required
-  @@ Arg.opt Arg.(some string) None
-  @@ Arg.info ~doc:"Git branch of repo" ~docv:"branch" [ "branch"; "b" ]
+let branch_t =
+  let doc = "Selected GitHub branch where to fetch the tracker file." in
+  Arg.(value @@ opt string "main" @@ info ~doc ~docv:"BRANCH" [ "branch"; "b" ])
 
-let cmd =
-  let doc = "an OCurrent pipeline" in
-  let info = Cmd.info program_name ~doc in
+let test_t =
+  let doc = "Specify if the code is executed in a test environment or not." in
+  Arg.(value @@ flag @@ info ~doc [ "test"; "t" ])
+
+let conf_t =
+  Arg.(
+    required
+    @@ opt (some file) None
+    @@ info ~doc:"The YAML tracker file" ~docv:"FILE" [ "file"; "f" ])
+
+let lint_cmd =
+  let name = "lint" in
+  let doc = "Linter to check the tracker file is correct" in
+  let info = Cmd.info ~doc name in
+  Cmd.v info Term.(term_result (const lint $ setup_log_t $ conf_t $ test_t))
+
+let run_cmd =
+  let name = "run" in
+  let doc = "Run the OCurrent pipeline" in
+  let info = Cmd.info ~doc name in
   Cmd.v info
     Term.(
       term_result
         (const main
-        $ setup_log
+        $ setup_log_t
         $ Current.Config.cmdliner
         $ Current_web.cmdliner
-        $ branch
+        $ branch_t
         $ Gh.App.cmdliner
         $ Gh.Auth.cmdliner))
+
+let cmd =
+  let doc = "an OCurrent pipeline" in
+  let info = Cmd.info program_name ~doc in
+  Cmd.group info [ run_cmd; lint_cmd ]
 
 let () = Cmd.(exit @@ eval cmd)
