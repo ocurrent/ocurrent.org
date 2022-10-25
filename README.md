@@ -71,7 +71,6 @@ dune exec -- bin/main.exe --github-account-allowlist="<USER>" \
                           --github-app-id="<ID>" \
                           --github-private-key-file="key.pem" \
                           --github-webhook-secret-file="secret-file" \
-                          --repo="ocurrent/ocurrent.org" \
                           --branch="master" \
                           -v
 ```
