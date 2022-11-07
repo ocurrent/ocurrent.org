@@ -6,6 +6,7 @@ type selection = {
   repo : string;
   commit : Git.Commit.t Current.t;
   files : File.Copy.info list;
+  data : File.Data.info list;
 }
 
 let fetch_commit ?branch ~github ~repo () =
@@ -20,14 +21,18 @@ let fetch_commit ?branch ~github ~repo () =
   (repo.name, Git.fetch commit_id)
 
 let fetch_selections ~github ~repos =
-  let f (repo, files) =
+  let f (repo, files, data) =
     let repo, commit = fetch_commit ~github ~repo () in
-    { repo; commit; files }
+    { repo; commit; files; data }
   in
   List.map f repos
 
 let fetch_file_content selections =
-  let f { repo; commit; files } = Content.fetch ~repo ~commit files in
+  let f { repo; commit; files; _ } = Content.fetch ~repo ~commit files in
+  List.map f selections
+
+let memorize selections =
+  let f { repo; commit; data; _ } = Content.store ~repo ~commit data in
   List.map f selections
 
 let v ~branch ~app () =
@@ -45,8 +50,12 @@ let v ~branch ~app () =
            let repos = Conf.repos conf in
            let selections = fetch_selections ~github ~repos in
            let files =
-             let files = fetch_file_content selections in
-             Current.list_seq files |> Current.map List.flatten
+             fetch_file_content selections
+             |> Current.list_seq
+             |> Current.map List.flatten
            in
            let indexes = Conf.indexes conf in
-           Hugo.build ~commit ~conf files indexes
+           let data =
+             memorize selections |> Current.list_seq |> Current.map List.flatten
+           in
+           Hugo.build ~commit ~conf files indexes data

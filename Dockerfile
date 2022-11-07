@@ -16,4 +16,4 @@ RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN git config --global user.email "contact@tarides.com"
 RUN git config --global user.name "Tarides Pipeline"
 EXPOSE 8080
-ENTRYPOINT [ "dumb-init", "website-watcher" ]
+ENTRYPOINT [ "dumb-init", "website-watcher", "run" ]

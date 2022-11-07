@@ -5,8 +5,10 @@ val output : t -> Current_github.Repo_id.t * string
 (** [output t] gives the repository and the branch associated to the output
     repository where the website will be built. *)
 
-val repos : t -> (Current_github.Repo_id.t * File.Copy.info list) list
-(** [repos t] returns, for each repository, the files tracked into this
+val repos :
+  t ->
+  (Current_github.Repo_id.t * File.Copy.info list * File.Data.info list) list
+(** [repos t] returns, for each repository, the files and data tracked into this
     repository. This files are going to be copied into the base skeleton. For
     more information about the vocabulary, see {!Pipeline}. *)
 
@@ -30,3 +32,8 @@ module Static : sig
   val remote_name : string
   (** The name of the remote to add to git. *)
 end
+
+val lint : ?test:bool -> Fpath.t -> (unit, [ `Msg of string ]) result
+(** [lint file] ensures the file given in argument work as expected, i.e it's
+    able to be parse as a tracker file. [test] executes more checks and is
+    intended to be used for tests. *)
