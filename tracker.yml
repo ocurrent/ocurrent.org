@@ -52,6 +52,13 @@ repos:
         summary: "How to deploy your own CI with Docker."
         src: "doc/docker-deployement.md"
         dst: "content/docs/ocaml-ci/docker-deployement.md"
+  - owner: "ocurrent"
+    name: "opam-repo-ci"
+    files:
+      - title: "Readme"
+        summary: "Informations about what is opam-repo-ci."
+        src: "README.md"
+        dst: "content/docs/opam-repo-ci/readme.md"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
@@ -62,3 +69,6 @@ indexes:
   - title: "OCaml CI"
     description: "Material about OCaml CI"
     dst: "content/docs/ocaml-ci"
+  - title: "Opam Repo CI"
+    description: "List of materials about Opam Repo CI"
+    dst: "content/docs/opam-repo-ci"
