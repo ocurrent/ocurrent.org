@@ -30,7 +30,17 @@ repos:
         dst: "content/docs/ocurrent/disk_cache.md"
         authors:
           - "The OCurrent Team"
+  - owner: "ocurrent"
+    name: " ocaml-multicore-ci"
+    files:
+      - title: "Readme"
+        summary: "What is and how to run ocaml-multicore-ci"
+        src: "README.md"
+        dst: "content/docs/ocaml-multicore-ci/readme.md"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
     dst: "content/docs/ocurrent/"
+  - title: "OCaml Multicore CI"
+    description: "List of OCaml Multicore CI documents"
+    dst: "content/docs/ocaml-multicore-ci"
