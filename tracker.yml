@@ -59,6 +59,13 @@ repos:
         summary: "Informations about what is opam-repo-ci."
         src: "README.md"
         dst: "content/docs/opam-repo-ci/readme.md"
+  - owner: "ocurrent"
+    name: "opam-health-check"
+    files:
+      - title: "Readme"
+        summary: "What is the purpose of opam-health-check and how to use it."
+        src: "README.md"
+        dst: "content/docs/opam-health-check/readme.md"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
@@ -72,3 +79,6 @@ indexes:
   - title: "Opam Repo CI"
     description: "List of materials about Opam Repo CI"
     dst: "content/docs/opam-repo-ci"
+  - title: "Opam Health Check"
+    description: "List of opam-health-check documents"
+    dst: "content/docs/opam-health-check"
