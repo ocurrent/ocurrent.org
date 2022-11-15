@@ -73,6 +73,13 @@ repos:
         summary: "How OCaml Docs CI works."
         src: "README.md"
         dst: "content/docs/ocaml-docs-ci/readme.md"
+  - owner: "ocurrent"
+    name: "Docker Base Images"
+    files:
+      - title: "Readme"
+        summary: "Description about what is the purpose of docker-base-images."
+        src: "README.md"
+        dst: "content/docs/docker-base-images"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
@@ -92,3 +99,6 @@ indexes:
   - title: "OCaml Docs CI"
     description: "Various materials about ocaml-docs-ci"
     dst: "content/docs/ocaml-docs-ci"
+  - title: "Docker Base Images"
+    description: "List of docker-base-images resources"
+    dst: "content/docs/docker-base-images"
