@@ -66,6 +66,13 @@ repos:
         summary: "What is the purpose of opam-health-check and how to use it."
         src: "README.md"
         dst: "content/docs/opam-health-check/readme.md"
+  - owner: "ocurrent"
+    name: "OCaml Docs CI"
+    files:
+      - title: "Readme"
+        summary: "How OCaml Docs CI works."
+        src: "README.md"
+        dst: "content/docs/ocaml-docs-ci/readme.md"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
@@ -82,3 +89,6 @@ indexes:
   - title: "Opam Health Check"
     description: "List of opam-health-check documents"
     dst: "content/docs/opam-health-check"
+  - title: "OCaml Docs CI"
+    description: "Various materials about ocaml-docs-ci"
+    dst: "content/docs/ocaml-docs-ci"
