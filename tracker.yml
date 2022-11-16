@@ -31,12 +31,14 @@ repos:
         authors:
           - "The OCurrent Team"
   - owner: "ocurrent"
-    name: " ocaml-multicore-ci"
+    name: "ocaml-multicore-ci"
     files:
       - title: "Readme"
         summary: "What is and how to run ocaml-multicore-ci."
         src: "README.md"
         dst: "content/docs/ocaml-multicore-ci/readme.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "ocaml-ci"
     files:
@@ -44,14 +46,26 @@ repos:
         summary: "What is OCaml CI and how to use it."
         src: "README.md"
         dst: "content/docs/ocaml-ci/README.md"
-      - tile: "Development notes"
+        authors:
+          - "The OCurrent Team"
+      - title: "Development notes"
         summary: "How to setup a development environment for OCaml CI."
         src: "doc/dev.md"
         dst: "content/docs/ocaml-ci/dev.md"
+        authors:
+          - "The OCurrent Team"
+      - title: "Development notes"
+        summary: "How to setup a development environment for OCaml CI."
+        src: "doc/dev.md"
+        dst: "content/docs/ocaml-ci/dev.md"
+        authors:
+          - "The OCurrent Team"
       - title: "Deploy on Docker"
         summary: "How to deploy your own CI with Docker."
-        src: "doc/docker-deployement.md"
-        dst: "content/docs/ocaml-ci/docker-deployement.md"
+        src: "doc/docker-deployment.md"
+        dst: "content/docs/ocaml-ci/docker-deployment.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "opam-repo-ci"
     files:
@@ -59,6 +73,8 @@ repos:
         summary: "Informations about what is opam-repo-ci."
         src: "README.md"
         dst: "content/docs/opam-repo-ci/README.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "opam-health-check"
     files:
@@ -66,6 +82,8 @@ repos:
         summary: "What is the purpose of opam-health-check and how to use it."
         src: "README.md"
         dst: "content/docs/opam-health-check/README.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "ocaml-docs-ci"
     files:
@@ -73,6 +91,8 @@ repos:
         summary: "How OCaml Docs CI works."
         src: "README.md"
         dst: "content/docs/ocaml-docs-ci/README.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "docker-base-images"
     files:
@@ -80,6 +100,8 @@ repos:
         summary: "Description about what is the purpose of docker-base-images."
         src: "README.md"
         dst: "content/docs/docker-base-images/README.md"
+        authors:
+          - "The OCurrent Team"
   - owner: "ocurrent"
     name: "ocurrent-deployer"
     files:
@@ -87,10 +109,14 @@ repos:
         summary: "Explanations about ocurrent-deployer."
         src: "README.md"
         dst: "content/docs/ocurrent-deployer/README.md"
+        authors:
+          - "The OCurrent Team"
       - title: "VM Host Machine"
-        summury: "How to setup a VM to use your own deployer."
+        summary: "How to setup a VM to use your own deployer."
         src: "VM-host.md"
         dst: "content/docs/ocurrent-deployer/VM-host.md"
+        authors:
+          - "The OCurrent Team"
 indexes:
   - title: "OCurrent"
     description: "List of OCurrent documents"
