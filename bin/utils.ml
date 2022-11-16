@@ -86,6 +86,8 @@ module Dir = struct
 end
 
 module Yaml = struct
+  exception Nested_invalid_arg of string
+
   let read_file path =
     let ch = open_in_bin path in
     Fun.protect
@@ -131,8 +133,12 @@ module Yaml = struct
   let access_str ~field yaml = access ~field yaml |> from_string
 
   let access_array ~field f yaml =
-    try access ~field yaml |> from_array |> List.map f
-    with Invalid_argument _ -> []
+    let f_instrumented yaml =
+      try f yaml with Invalid_argument arg -> raise (Nested_invalid_arg arg)
+    in
+    try access ~field yaml |> from_array |> List.map f_instrumented with
+    | Invalid_argument _ -> []
+    | Nested_invalid_arg msg -> invalid_arg msg
 
   let access_str_array ~field yaml = access_array ~field from_string yaml
 end

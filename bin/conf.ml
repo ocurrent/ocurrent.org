@@ -184,7 +184,11 @@ module Reloader = struct
     Current.Job.start job ~level:Current.Level.Average >>= fun () ->
     Current_git.with_checkout ~job commit @@ fun dir ->
     let path = Fpath.add_seg dir "tracker.yml" in
-    Yaml.from_file path |> Lwt_result.return
+    let conf = Yaml.from_file path in
+    let dump = Yojson.Safe.to_string (JSON.conf_to_json conf) in
+    Current.Job.log job "The configuration used to build the website is:\n %s"
+      dump;
+    Lwt_result.return conf
 
   let pp f key = Fmt.pf f "@[<v2>Reload config for commit %a@]" Key.pp key
   let auto_cancel = true
