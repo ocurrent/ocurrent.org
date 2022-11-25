@@ -67,7 +67,8 @@ module Yaml : sig
 
       where [access_array ~field:"book" ~f yaml] will return an object in the
       format required by the [f] function. It returns an empty list in case the
-      field can't be found. *)
+      field can't be found. However, if f raised an Invalid_argument execption,
+      it will propagate the exeception. *)
 
   val access_str_array : field:string -> Yaml.value -> string list
   (** [access_str_array ~field yaml] is the same as {!access_array} but with a
