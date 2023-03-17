@@ -14,10 +14,11 @@ let has_role user = function
           true
       | _ -> false)
 
-let webhook_route ~engine ~has_role ~webhook_secret =
+let webhook_route ~engine ~webhook_secret =
+  let get_job_ids ~owner:_ ~name:_ ~hash:_ = [] in
   Routes.(
     (s "webhooks" / s "github" /? nil)
-    @--> Gh.webhook ~engine ~has_role ~webhook_secret)
+    @--> Gh.webhook ~engine ~get_job_ids ~webhook_secret)
 
 let login_route github_auth =
   Routes.((s "login" /? nil) @--> Gh.Auth.login github_auth)
@@ -38,7 +39,7 @@ let main () config mode branch app github_auth =
   let webhook_secret = String.trim (Gh.App.webhook_secret app) in
   let engine = Current.Engine.create ~config (Pipeline.v ~branch ~app) in
   let routes =
-    webhook_route ~engine ~has_role ~webhook_secret
+    webhook_route ~engine ~webhook_secret
     :: login_route github_auth
     :: Current_web.routes engine
   in
