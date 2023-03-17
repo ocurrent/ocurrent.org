@@ -1,6 +1,6 @@
-FROM ocaml/opam:alpine-3.15-ocaml-4.14@sha256:7004b4b0443758ff0830c39a1af02090430e58890fc1f9e58433844ebd61d4d1 AS build
+FROM ocaml/opam:alpine-3.15-ocaml-4.14@sha256:c59b22d96e79b4da4156f551e521bf0998cfacf44a7542fad6798c92cfdf3fb0 AS build
 COPY --chown=opam ./ocurrentorg.opam /src/ocurrentorg/
-RUN cd ~/opam-repository && git fetch origin -q master && git reset --hard a646deef8b76bc41d18d877032ab27d30bb8bc6b && opam update
+RUN cd ~/opam-repository && git fetch origin -q master && git reset --hard c59aec93bab15c48f633a83cea5344ddbfbf5556 && opam update
 RUN sudo apk update && sudo apk add gmp-dev graphviz libev-dev libffi-dev sqlite-dev
 WORKDIR /src/ocurrentorg
 RUN opam-2.1 install . -y --deps-only
