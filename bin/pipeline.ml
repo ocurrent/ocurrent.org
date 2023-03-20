@@ -99,3 +99,18 @@ let v ~branch ~app () =
              memorize selections |> Current.list_seq |> Current.map List.flatten
            in
            Hugo.build ~commit ~conf files indexes data
+
+let notify_status ?channel x =
+  match channel with
+  | None -> x
+  | Some channel ->
+      let s =
+        let+ state = Current.catch x in
+        Fmt.str "ocurrent.org-watcher: %a"
+          (Current_term.Output.pp Current.Unit.pp)
+          state
+      in
+      Current.all
+        [ Current_slack.post channel ~key:"ocurrent.org-watcher-status" s; x ]
+
+let v ?channel ~branch ~app () = v ~branch ~app () |> notify_status ?channel

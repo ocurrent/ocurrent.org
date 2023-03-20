@@ -4,6 +4,17 @@ let setup_log style_renderer default_level =
   Fmt_tty.setup_std_outputs ?style_renderer ();
   Prometheus_unix.Logging.init ?default_level ()
 
+let read_channel_uri path =
+  let read_first_line path =
+    let ch = open_in path in
+    Fun.protect (fun () -> input_line ch) ~finally:(fun () -> close_in ch)
+  in
+  try
+    let uri = read_first_line path in
+    Current_slack.channel (Uri.of_string (String.trim uri))
+  with ex ->
+    Fmt.failwith "Failed to read slack URI from %S: %a" path Fmt.exn ex
+
 let program_name = "pipeline"
 
 let has_role user = function
@@ -30,14 +41,17 @@ let lint () file test =
       Fmt.(pr "[%a]: %s is correct.\n%!" (styled `Green string) "OK" file))
     (Conf.lint ~test path)
 
-let main () config mode branch app github_auth =
+let main () channel config mode branch app github_auth =
+  let channel = Option.map read_channel_uri channel in
   let authn = Option.map Gh.Auth.make_login_uri github_auth in
   let has_role =
     if github_auth = None then Current_web.Site.allow_all else has_role
   in
   let secure_cookies = github_auth <> None in
   let webhook_secret = String.trim (Gh.App.webhook_secret app) in
-  let engine = Current.Engine.create ~config (Pipeline.v ~branch ~app) in
+  let engine =
+    Current.Engine.create ~config (Pipeline.v ?channel ~branch ~app)
+  in
   let routes =
     webhook_route ~engine ~webhook_secret
     :: login_route github_auth
@@ -51,6 +65,13 @@ let main () config mode branch app github_auth =
     (Lwt.choose [ Current.Engine.thread engine; Current_web.run ~mode site ])
 
 open Cmdliner
+
+let slack_t =
+  Arg.value
+  @@ Arg.opt Arg.(some file) None
+  @@ Arg.info
+       ~doc:"A file containing the URI of the endpoint for status updates"
+       ~docv:"URI-FILE" [ "slack" ]
 
 let setup_log_t =
   let docs = Manpage.s_common_options in
@@ -85,6 +106,7 @@ let run_cmd =
       term_result
         (const main
         $ setup_log_t
+        $ slack_t
         $ Current.Config.cmdliner
         $ Current_web.cmdliner
         $ branch_t
