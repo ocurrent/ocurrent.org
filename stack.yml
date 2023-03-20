@@ -3,7 +3,13 @@ version: '3.9'
 services:
   ocurrentorg-watcher:
     image: ocurrent/watcher:latest
-    command: --github-account-allowlist="maiste" --github-app-id="232762"  --github-private-key-file="/run/secrets/ocurrentorg-key" --github-webhook-secret-file="/run/secrets/ocurrentorg-secret" --branch=live-engine -v
+    command: >
+      --github-account-allowlist="maiste"
+      --github-app-id="232762"
+      --github-private-key-file="/run/secrets/ocurrentorg-key"
+      --github-webhook-secret-file="/run/secrets/ocurrentorg-secret"
+      --branch=live-engine -v
+      --slack="/run/secret/ocurrentorg-slack"
     ports:
       - "8090:8080"
     secrets:
