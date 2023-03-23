@@ -18,6 +18,7 @@
     (current_git (>= 0.6.4))
     (current_github (>= 0.6.4))
     (current_docker (>= 0.6.4))
+    (current_slack (>= 0.6.4))
     (current_web (>= 0.6.4))
     (yaml (>= 3.1.0))
     (bos (>= 0.2.1))
