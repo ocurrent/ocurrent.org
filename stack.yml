@@ -15,6 +15,7 @@ services:
     secrets:
       - "ocurrentorg-key"
       - "ocurrentorg-secret"
+      - "ocurrentorg-slack"
       - source: "ocurrentorg-ssh"
         mode: 0600
 
@@ -22,6 +23,8 @@ secrets:
   ocurrentorg-key:
     external: true
   ocurrentorg-secret:
+    external: true
+  ocurrentorg-slack:
     external: true
   ocurrentorg-ssh:
     external: true
