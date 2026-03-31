@@ -1,0 +1,113 @@
+name: Build and deploy site
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch docs from tracked repos
+        run: |
+          fetch_file() {
+            local owner="$1" repo="$2" src="$3" dst="$4" title="$5" summary="$6"
+            echo "Fetching $owner/$repo/$src -> $dst"
+            mkdir -p "$(dirname "$dst")"
+            curl -sfL "https://raw.githubusercontent.com/$owner/$repo/HEAD/$src" -o "$dst"
+            if ! head -1 "$dst" | grep -q '^---'; then
+              tmp=$(mktemp)
+              cat > "$tmp" <<FRONT
+          ---
+          title: "$title"
+          summary: "$summary"
+          authors: ["The OCurrent Team"]
+          ---
+
+          FRONT
+              cat "$dst" >> "$tmp"
+              mv "$tmp" "$dst"
+            fi
+          }
+
+          # ocurrent/ocurrent
+          fetch_file ocurrent ocurrent doc/example_pipelines.md content/docs/ocurrent/example_pipelines.md "Example pipelines" "Some example pipelines in OCurrent"
+          fetch_file ocurrent ocurrent doc/internals.md content/docs/ocurrent/internals.md "Internal overview" "How OCurrent work under the hood"
+          fetch_file ocurrent ocurrent doc/writing_plugins.md content/docs/ocurrent/writing_plugins.md "Write your own plugin" "How to write your own plugin in OCurrent"
+          fetch_file ocurrent ocurrent doc/disk_cache.md content/docs/ocurrent/disk_cache.md "The build cache" "How the build cache is stored"
+
+          # ocurrent/ocaml-multicore-ci
+          fetch_file ocurrent ocaml-multicore-ci README.md content/docs/ocaml-multicore-ci/readme.md "Readme" "What is and how to run ocaml-multicore-ci."
+
+          # ocurrent/ocaml-ci
+          fetch_file ocurrent ocaml-ci README.md content/docs/ocaml-ci/README.md "Readme" "What is OCaml CI and how to use it."
+          fetch_file ocurrent ocaml-ci doc/dev.md content/docs/ocaml-ci/dev.md "Development notes" "How to setup a development environment for OCaml CI."
+          fetch_file ocurrent ocaml-ci doc/docker-deployment.md content/docs/ocaml-ci/docker-deployment.md "Deploy on Docker" "How to deploy your own CI with Docker."
+
+          # ocurrent/opam-repo-ci
+          fetch_file ocurrent opam-repo-ci README.md content/docs/opam-repo-ci/README.md "Readme" "Informations about what is opam-repo-ci."
+
+          # ocurrent/opam-health-check
+          fetch_file ocurrent opam-health-check README.md content/docs/opam-health-check/README.md "Readme" "What is the purpose of opam-health-check and how to use it."
+
+          # ocurrent/ocaml-docs-ci
+          fetch_file ocurrent ocaml-docs-ci README.md content/docs/ocaml-docs-ci/README.md "Readme" "How OCaml Docs CI works."
+
+          # ocurrent/docker-base-images
+          fetch_file ocurrent docker-base-images README.md content/docs/docker-base-images/README.md "Readme" "Description about what is the purpose of docker-base-images."
+
+          # ocurrent/ocurrent-deployer
+          fetch_file ocurrent ocurrent-deployer README.md content/docs/ocurrent-deployer/README.md "Readme" "Explanations about ocurrent-deployer."
+          fetch_file ocurrent ocurrent-deployer VM-host.md content/docs/ocurrent-deployer/VM-host.md "VM Host Machine" "How to setup a VM to use your own deployer."
+
+      - name: Generate index pages
+        run: |
+          generate_index() {
+            local title="$1" description="$2" dst="$3"
+            mkdir -p "$dst"
+            cat > "$dst/_index.md" <<FRONT
+          ---
+          title: "$title"
+          description: "$description"
+          ---
+          FRONT
+          }
+
+          generate_index "OCurrent" "List of OCurrent documents" content/docs/ocurrent
+          generate_index "OCaml Multicore CI" "List of OCaml Multicore CI documents" content/docs/ocaml-multicore-ci
+          generate_index "OCaml CI" "Material about OCaml CI" content/docs/ocaml-ci
+          generate_index "Opam Repo CI" "List of materials about Opam Repo CI" content/docs/opam-repo-ci
+          generate_index "Opam Health Check" "List of opam-health-check documents" content/docs/opam-health-check
+          generate_index "OCaml Docs CI" "Various materials about ocaml-docs-ci" content/docs/ocaml-docs-ci
+          generate_index "Docker Base Images" "List of docker-base-images resources" content/docs/docker-base-images
+          generate_index "OCurrent Deployer" "Resources to work with ocurrent-deployer" content/docs/ocurrent-deployer
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.139.0'
+          extended: true
+
+      - name: Build
+        run: |
+          hugo -d public --logLevel info
+          echo "www.ocurrent.org" > public/CNAME
+
+      - name: Deploy to gh-pages branch
+        run: |
+          cd public
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b gh-pages
+          git add .
+          git commit -m "Deploy $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" gh-pages
