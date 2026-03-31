@@ -5,6 +5,9 @@ title: "OCurrent"
 MetaDataFormat: "yaml"
 
 markup:
+    goldmark:
+        renderer:
+            unsafe: true
     highlight:
         noClasses: false
 

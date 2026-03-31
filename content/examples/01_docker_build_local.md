@@ -1,7 +1,7 @@
 ---
 title: "Docker\_build\_local"
 summary: "Simple sequential pipeline"
-path: "/examples/01"
+url: "/examples/01"
 image: "/examples/example1.svg"
 ---
 

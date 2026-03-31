@@ -11,7 +11,7 @@ FROM alpine:edge
 RUN apk update && apk add dumb-init git graphviz libev sqlite-dev gmp openssh hugo
 COPY --from=build /src/ocurrentorg/_build/install/default/bin/watcher /usr/local/bin/website-watcher
 RUN mkdir -p "/root/.ssh"
-RUN echo -e "HostName github.com\n    User git\n    IdentityFile /run/secrets/ocurrentorg-ssh" >> "/root/.ssh/config"
+RUN echo -e "Host github.com\n    HostName github.com\n    User git\n    IdentityFile /run/secrets/ocurrentorg-ssh" >> "/root/.ssh/config"
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN git config --global user.email "contact@tarides.com"
 RUN git config --global user.name "Tarides Pipeline"

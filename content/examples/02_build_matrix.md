@@ -1,7 +1,7 @@
 ---
 title: "Build\_matrix"
 summary: "Builds on multiple compiler versions"
-path: "/examples/02"
+url: "/examples/02"
 image: "/examples/example2.svg"
 ---
 
