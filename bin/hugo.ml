@@ -66,7 +66,7 @@ module Hugo = struct
   let hugo ~cwd job =
     let output = Conf.Static.hugo_output in
     Current.Process.exec ~cwd ~job ~cancellable:true
-      ("", [| "hugo"; "-d"; output; "-v" |])
+      ("", [| "hugo"; "-d"; output; "--verbose" |])
 
   let deploy_over_git ~cwd ~job ~conf src commit =
     let open Lwt_result.Infix in
