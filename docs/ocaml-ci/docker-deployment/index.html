@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Deploy on Docker</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocaml-ci/docker-deployment/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Deploy on Docker">
+  <meta property="og:description" content="How to deploy your own CI with Docker.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Deploy on Docker</h1>
+
+
+<p>This document gives a step-by-step guide to deploying OCaml-CI from the
+Docker images and how to integrate them into a GitHub organisation to
+monitor PRs.</p>
+<h1 id="build-the-docker-images">Build the Docker images</h1>
+<pre tabindex="0"><code class="language-shell=" data-lang="shell=">git clone --recursive https://github.com/ocurrent/ocaml-ci.git
+cd ocaml-ci
+docker build -t ocaml-ci-service .
+docker build -f Dockerfile.web -t ocaml-ci-web .
+</code></pre><h1 id="create-a-github-app">Create a GitHub App</h1>
+<p>Sign in to your <a href="github.com">GitHub</a> account</p>
+<ol>
+<li>Navigate to your account/organizations settings. &hellip;</li>
+<li>In the left sidebar, click Developer settings.</li>
+<li>In the left sidebar, click GitHub Apps.</li>
+<li>Click New GitHub App.</li>
+<li>In &ldquo;GitHub App name&rdquo;, type the name of your app. &hellip;</li>
+<li>Optionally, in &ldquo;Description&rdquo;, type a description of your app that users will see.</li>
+</ol>
+<h2 id="complete-the-form">Complete the form</h2>
+<p>App Name: example-ci (must be unique across GitHub)
+Homepage URL: <a href="https://ci.example.org/">https://ci.example.org/</a>
+Callback URL: <a href="https://ci.example.org:8100/login">https://ci.example.org:8100/login</a>
+Webhook URL: <a href="https://ci.example.org:8100/webhooks/github">https://ci.example.org:8100/webhooks/github</a>
+Webhook Secret: Create a secure webhook secret - perhaps like this <code>ruby -rsecurerandom -e 'print SecureRandom.hex(20)'</code></p>
+<p>Give repository permissions:</p>
+<ul>
+<li>Checks: Read/Write</li>
+<li>Commit statuses: Read/Write</li>
+<li>Contents: Read-only</li>
+<li>Metadata: Read-only (default)</li>
+<li>Pull requests: Read-only</li>
+</ul>
+<p>Subscribe to events:</p>
+<ul>
+<li>Create</li>
+<li>Pull request</li>
+<li>Push</li>
+</ul>
+<p>Where can this GitHub App be installed? Any account</p>
+<p>Once the app has been created record the App ID: 215418 (unique App ID)</p>
+<h1 id="docker-secrets">Docker Secrets</h1>
+<p>In GitHub, generate and download a private key for the new
+app. i.e. <code>example-ci.2022-06-28.private-key.pem</code></p>
+<p>On the machine which will host the Docker containers, ensure it is in
+swarm mode to allow the use of secrets:</p>
+<pre tabindex="0"><code class="language-shell=" data-lang="shell=">docker swarm init --advertise-addr 127.0.0.1:2377 --listen-addr 127.0.0.1:2377
+</code></pre><p>Create the Docker secrets required for the app.</p>
+<blockquote>
+<p>Be careful not to have a trailing return character on the webhook secret.
+Also be mindful of your shell history when creating secrets.</p>
+</blockquote>
+<p>This may be a good way to create a random secret in a file without a
+return character:</p>
+<pre tabindex="0"><code class="language-shell=" data-lang="shell=">ruby -rsecurerandom -e &#39;print SecureRandom.hex(20)&#39; &gt; example-ci-webhook-secret
+</code></pre><p>You will need a submission cap for a <a href="https://github.com/ocurrent/ocluster.git">OCurrent cluster</a>.</p>
+<pre tabindex="0"><code class="language-shell=" data-lang="shell=">docker secret create example-ci-github-key example-ci.2022-06-28.private-key.pem
+docker secret create example-ci-webhook-secret example-ci-webhook-secret
+docker secret create ocaml-ci-submission.cap cluster.cap
+</code></pre><h1 id="caddy-proxy">Caddy Proxy</h1>
+<p>Setup Caddy to act as a proxy for the Docker services.  Create <code>/etc/caddy/Caddyfile</code> as follows</p>
+<pre tabindex="0"><code>ci.example.org:8100 {
+        reverse_proxy ci:8080
+}               
+
+ci.example.org {
+        reverse_proxy web:8090
+}
+</code></pre><h1 id="deploy-the-docker-stack">Deploy the Docker Stack</h1>
+<p>Update <a href="example-stack.yml">example-stack.yml</a>:</p>
+<ul>
+<li>match the secret names created above</li>
+<li>update the application id</li>
+</ul>
+<pre tabindex="0"><code class="language-shell=" data-lang="shell=">docker stack deploy example --compose-file example-stack.yml
+</code></pre><p>Check the webhook delivery status under your app&rsquo;s advanced settings:</p>
+<p><a href="https://github.com/organizations/example/settings/apps/example-ci/advanced">https://github.com/organizations/example/settings/apps/example-ci/advanced</a></p>
+<h1 id="testing">Testing</h1>
+<p>Install the GitHub App for a user and select which repository you want to test</p>
+<p>Check <a href="https://ci.example.org">https://ci.example.org</a> and <a href="https://ci.example.org:8100">https://ci.example.org:8100</a></p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

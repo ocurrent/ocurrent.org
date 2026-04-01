@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Docker build local</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/examples/01/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Docker build local">
+  <meta property="og:description" content="Simple sequential pipeline">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="examples">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<div id="topline">
+    <h1>Docker build local</h1>
+    
+    <p class="summary">Simple sequential pipeline</p>
+    
+</div>
+
+
+<p>This monitors a local Git repository (<code>repo</code>), from which it gets the current
+head commit. It copies it to a temporary clone and builds it with <code>docker build /path/to/clone</code>, then executes the example with <code>--help</code> to check that it runs.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ git clone https://github.com/talex5/ocurrent.git
+</span></span><span class="line"><span class="cl">$ <span class="nb">cd</span> ocurrent/
+</span></span><span class="line"><span class="cl">$ dune <span class="nb">exec</span> -- ./examples/docker_build_local.exe .
+</span></span><span class="line"><span class="cl"><span class="o">[</span>...<span class="o">]</span>
+</span></span><span class="line"><span class="cl">    current <span class="o">[</span>INFO<span class="o">]</span> Evaluation complete:
+</span></span><span class="line"><span class="cl">                     Result: Pending
+</span></span><span class="line"><span class="cl">                     Watching: <span class="o">[</span>/home/user/ocurrent/#refs/heads/master<span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                HEAD<span class="o">(</span>/home/user/ocurrent/<span class="o">)]</span>
+</span></span><span class="line"><span class="cl"><span class="o">[</span>...<span class="o">]</span>
+</span></span><span class="line"><span class="cl">current.docker <span class="o">[</span>INFO<span class="o">]</span> Build of docker image <span class="s2">&#34;build-of-d75e33fd875d80cd8e0cddf83904dd6d7aea12d3&#34;</span> succeeded
+</span></span><span class="line"><span class="cl"><span class="o">[</span>...<span class="o">]</span>
+</span></span><span class="line"><span class="cl">    current <span class="o">[</span>INFO<span class="o">]</span> Evaluation complete:
+</span></span><span class="line"><span class="cl">                     Result: Ok <span class="o">()</span>
+</span></span><span class="line"><span class="cl">                     Watching: <span class="o">[</span>/home/user/ocurrent/#refs/heads/master<span class="p">;</span>
+</span></span><span class="line"><span class="cl">                                HEAD<span class="o">(</span>/home/user/ocurrent/<span class="o">)]</span>
+</span></span></code></pre></div><p>If you make a new commit or change branch (e.g. <code>git checkout -b test HEAD~1</code>) then OCurrent will
+notice and build it again.</p>
+<p>The example code above works mostly with values of type <code>'a Current.t</code>.
+For example, <code>Docker.build</code> takes a source current and returns a Docker image current.
+If you have a function that works on concrete values then you can use <code>Current.map</code>
+(or the <code>let+</code> syntax) to make it work on currents instead.</p>
+<p>You can also use <code>Current.bind</code> (or the <code>let*</code> syntax) if you can only decide
+what the next part of the pipeline should be by looking at a concrete input.
+However, using <code>bind</code> limits OCurrent&rsquo;s ability to analyse the pipeline,
+because it must wait for the input to be ready before knowing what happens
+next.</p>
+<p>OCurrent has a small core language (in <code>lib</code> and <code>lib_term</code>), but most
+functionality is added by external libraries. See the <a href="https://github.com/talex5/ocurrent/blob/master/plugins">plugins</a> directory for
+some examples.</p>
+<p>The example also runs a minimal web UI on port 8080 (use <code>--port=...</code> to change it),
+showing the state of the system. You will need to have <a href="https://graphviz.org/">graphviz</a> installed in order
+to see the diagrams.</p>
+<p><img src="/examples/example1.svg" alt="example1"></p>
+<p>A green box indicates a pipeline stage that succeeded, orange means
+in-progress, grey means cannot be started yet (inputs not ready),
+yellow means queued or waiting for permission to start, and red means failed.</p>
+<p>Clicking on a box shows the log for that operation (though not all operations
+have logs; <code>head commit</code> doesn&rsquo;t, for example).</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

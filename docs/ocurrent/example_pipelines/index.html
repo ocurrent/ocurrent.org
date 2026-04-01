@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Example pipelines</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent/example_pipelines/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Example pipelines">
+  <meta property="og:description" content="Some example pipelines in OCurrent">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Example pipelines</h1>
+
+
+<h3 id="example-1--docker_build_localml">Example 1 : <code>docker_build_local.ml</code></h3>
+<p><a href="examples/docker_build_local.ml">docker_build_local.ml</a> contains a simple example pipeline:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="c">(* Run &#34;docker build&#34; on the latest commit in Git repository [repo]. *)</span>
+</span></span><span class="line"><span class="cl"><span class="k">let</span> <span class="n">pipeline</span> <span class="o">~</span><span class="n">repo</span> <span class="bp">()</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">src</span> <span class="o">=</span> <span class="nn">Git</span><span class="p">.</span><span class="nn">Local</span><span class="p">.</span><span class="n">head_commit</span> <span class="n">repo</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">image</span> <span class="o">=</span> <span class="nn">Docker</span><span class="p">.</span><span class="n">build</span> <span class="o">~</span><span class="n">pull</span> <span class="o">~</span><span class="n">timeout</span> <span class="o">(`</span><span class="nc">Git</span> <span class="n">src</span><span class="o">)</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Docker</span><span class="p">.</span><span class="n">run</span> <span class="n">image</span> <span class="o">~</span><span class="n">args</span><span class="o">:[</span><span class="s2">&#34;dune&#34;</span><span class="o">;</span> <span class="s2">&#34;exec&#34;</span><span class="o">;</span> <span class="s2">&#34;--&#34;</span><span class="o">;</span> <span class="s2">&#34;docker_build_local&#34;</span><span class="o">;</span> <span class="s2">&#34;--help&#34;</span><span class="o">]</span>
+</span></span></code></pre></div><p>This monitors a local Git repository (<code>repo</code>), from which it gets the current head commit.
+It copies it to a temporary clone and builds it with <code>docker build /path/to/clone</code>, then
+executes the example with <code>--help</code> to check that it runs.</p>
+<p>You can test it using a clone of the OCurrent repository itself:</p>
+<pre tabindex="0"><code>$ dune exec -- docker_build_local .
+   current_web [INFO] Starting web server: (TCP (Port 8080))
+       current [INFO] Result: Running
+[...]
+current.docker [INFO] Built docker image sha256:caf89896b8ad0fe08dede715b3b0f73815b4c6e7687dc0b38cb4a269a5ce7106
+[...]
+       current [INFO] Result: Ok: ()
+</code></pre><p>If you make a new commit or change branch (e.g. <code>git checkout -b test HEAD~1</code>) then OCurrent will
+notice and build it again.</p>
+<p>The example code above works mostly with values of type <code>'a Current.t</code>.
+For example, <code>Docker.build</code> takes a source current and returns a Docker image current.
+If you have a function that works on concrete values then you can use <code>Current.map</code>
+(or the <code>let+</code> syntax) to make it work on currents instead.</p>
+<p>You can also use <code>Current.bind</code> (or the <code>let*</code> syntax) if you can only decide
+what the next part of the pipeline should be by looking at a concrete input.
+However, using <code>bind</code> limits OCurrent&rsquo;s ability to analyse the pipeline,
+because it must wait for the input to be ready before knowing what happens
+next.
+It is almost never necessary to use a bind, and many large pipelines (such as
+ocaml-ci) don&rsquo;t use any.
+If you feel you must use a bind, consider using <code>let**</code> instead, which at least
+allows you to label the box in the diagram.</p>
+<p>OCurrent has a small core language (in <code>lib</code> and <code>lib_term</code>), but most
+functionality is added by external libraries. See the <a href="https://github.com/ocurrent/ocurrent/blob/master/plugins">plugins</a> directory for
+some examples.</p>
+<p>The example also runs a minimal web UI on port 8080 (use <code>--port=...</code> to change it),
+showing the state of the system. You will need to have <a href="https://graphviz.org/">graphviz</a> installed in order
+to see the diagrams.</p>
+<p><img src="example1.svg" alt="example1"></p>
+<p>A green box indicates a pipeline stage that succeeded, orange means
+in-progress, grey means cannot be started yet (inputs not ready),
+yellow means queued or waiting for permission to start, and red means failed.</p>
+<p>Clicking on a box shows the log for that operation (though not all operations
+have logs; <code>head commit</code> doesn&rsquo;t, for example).</p>
+<h3 id="example-2--build_matrixml">Example 2 : <code>build_matrix.ml</code></h3>
+<p><a href="examples/build_matrix.ml">build_matrix.ml</a> contains a slightly more advanced pipeline:</p>
+<p><img src="example2.svg" alt="example2"></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="k">let</span> <span class="n">weekly</span> <span class="o">=</span> <span class="nn">Current_cache</span><span class="p">.</span><span class="nn">Schedule</span><span class="p">.</span><span class="n">v</span> <span class="o">~</span><span class="n">valid_for</span><span class="o">:(</span><span class="nn">Duration</span><span class="p">.</span><span class="n">of_day</span> <span class="n">7</span><span class="o">)</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c">(* Run &#34;docker build&#34; on the latest commit in Git repository [repo]. *)</span>
+</span></span><span class="line"><span class="cl"><span class="k">let</span> <span class="n">pipeline</span> <span class="o">~</span><span class="n">repo</span> <span class="bp">()</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">src</span> <span class="o">=</span> <span class="nn">Git</span><span class="p">.</span><span class="nn">Local</span><span class="p">.</span><span class="n">head_commit</span> <span class="n">repo</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">build</span> <span class="n">ocaml_version</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">base</span> <span class="o">=</span> <span class="nn">Docker</span><span class="p">.</span><span class="n">pull</span> <span class="o">~</span><span class="n">schedule</span><span class="o">:</span><span class="n">weekly</span> <span class="o">(</span><span class="s2">&#34;ocaml/opam:debian-ocaml-&#34;</span> <span class="o">^</span> <span class="n">ocaml_version</span><span class="o">)</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">dockerfile</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">      <span class="k">let</span><span class="o">+</span> <span class="n">base</span> <span class="o">=</span> <span class="n">base</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">      <span class="o">`</span><span class="nc">Contents</span> <span class="o">(</span><span class="n">dockerfile</span> <span class="o">~</span><span class="n">base</span> <span class="o">~</span><span class="n">ocaml_version</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">build</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="n">ocaml_version</span> <span class="o">~</span><span class="n">pull</span><span class="o">:</span><span class="bp">false</span> <span class="o">~</span><span class="n">dockerfile</span> <span class="o">(`</span><span class="nc">Git</span> <span class="n">src</span><span class="o">)</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">tag</span> <span class="o">~</span><span class="n">tag</span><span class="o">:(</span><span class="nn">Fmt</span><span class="p">.</span><span class="n">str</span> <span class="s2">&#34;example-%s&#34;</span> <span class="n">ocaml_version</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Current</span><span class="p">.</span><span class="n">all</span> <span class="o">[</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.10&#34;</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.11&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="o">]</span>
+</span></span></code></pre></div><p>The <code>Docker.pull</code> step shows the use of a <em>schedule</em>. In this case, we consider
+a pulled image to be valid for one week; after that OCurrent will automatically
+run the <code>docker pull</code> again to check for newer versions.</p>
+<p>It uses <code>Current.all</code> to build against different versions of OCaml, generating
+a suitable Dockerfile for each version (the <code>ocaml/opam2</code> image contains multiple
+versions of the compiler and the Dockerfile just selects one of them).</p>
+<p>The generated images are then tagged with the compiler version used to build them.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

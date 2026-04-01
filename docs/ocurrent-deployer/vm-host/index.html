@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>VM Host Machine</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent-deployer/vm-host/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="VM Host Machine">
+  <meta property="og:description" content="How to setup a VM to use your own deployer.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>VM Host Machine</h1>
+
+
+<h1 id="setting-up-a-vm-host-machine">Setting up a VM host machine</h1>
+<p>The unikernels are deployed to <code>m1-a</code>, a machine provided by <a href="https://packet.net">https://packet.net</a>. To set the machine up:</p>
+<ol>
+<li>
+<p>Configure a bridge by following the instructions in
+<a href="https://support.packet.com/kb/articles/kvm-qemu-bridging-on-a-bonded-network">https://support.packet.com/kb/articles/kvm-qemu-bridging-on-a-bonded-network</a> (the page title is confusing;
+you want the &ldquo;How to configure a bridge on a non-bonded network?&rdquo; section within it). e.g.</p>
+<pre tabindex="0"><code>auto vmbr1
+iface vmbr1 inet static
+    address 147.75.34.225
+    netmask 255.255.255.224
+    network 147.75.34.224
+    broadcast 147.75.34.255
+    bridge_ports none
+    bridge_stp off
+    bridge_fd 0
+    bridge_maxwait 0
+</code></pre><p>Note that <code>stp</code> must be <code>off</code> to avoid <code>set forward delay failed: Numerical result out of range</code> error.</p>
+<p>You must also delete the <code>lo:1</code> configuration section, which causes Linux to think it owns all the
+elastic IPs, instead of forwarding traffic to the guests.</p>
+</li>
+<li>
+<p>Set <code>net.ipv4.ip_forward=1</code> (also set this in <code>sysctl.conf</code>).</p>
+</li>
+<li>
+<p>Install Docker: <a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">https://docs.docker.com/install/linux/docker-ce/ubuntu/</a>.
+Note that if you start Docker before turning on IP forwarding then Docker will turn it on BUT
+it will also add an iptables rule blocking forwarded traffic from outside.</p>
+</li>
+<li>
+<p>Add a systemd service <code>/etc/systemd/system/tap@.service</code> to manage <code>tap</code> files:</p>
+<pre tabindex="0"><code>[Service]
+Type=oneshot
+ExecStart=/sbin/ip tuntap add tap-%i mode tap
+ExecStart=/sbin/brctl addif vmbr1 tap-%i
+ExecStart=/sbin/ip link set dev tap-%i up
+RemainAfterExit=true
+ExecStop=/sbin/ip tuntap del tap-%i mode tap
+</code></pre></li>
+<li>
+<p>Add a script to deploy unikernels <code>/usr/local/bin/deploy-mirage</code>:</p>
+<pre tabindex="0"><code>#!/bin/bash
+set -eu
+NAME=$1
+IMAGE=$2
+ID=$(docker container create $IMAGE)
+UNIKERNEL_PATH=/srv/unikernels/$NAME.hvt
+mkdir -p /srv/unikernels
+docker cp $ID:/unikernel.hvt $UNIKERNEL_PATH
+docker container rm $ID
+echo &#34;Exported unikernel to $UNIKERNEL_PATH&#34;
+echo &#34;Restarting $NAME...&#34;
+START=$(date +&#39;%Y-%m-%d %H:%M:%S&#39;)
+systemctl restart $NAME
+timeout 3s journalctl --since &#34;$START&#34; -u $NAME.service -f || echo
+systemctl status -n 0 $NAME
+</code></pre></li>
+<li>
+<p>Install the solo5 tools. I use this <code>Dockerfile</code> (adjust to match the host platform):</p>
+<pre tabindex="0"><code>FROM ocurrent/opam:ubuntu-18.04-ocaml-4.09
+RUN opam depext -i solo5-bindings-hvt
+</code></pre><p>Then build and install with:</p>
+<pre tabindex="0"><code>docker build -t solo5 .
+docker run --rm -i -w /home/opam/.opam/4.09/bin solo5 sh -c &#39;tar cf - solo5*&#39; | tar xvf - -C /usr/local/bin
+</code></pre></li>
+</ol>
+<h2 id="adding-a-unikernel-guest">Adding a unikernel guest</h2>
+<p>Create a systemd unit file for the unikernel. e.g. <code>/etc/systemd/system/mirage-www.service</code>:</p>
+<pre tabindex="0"><code>[Unit]
+Description=%N unikernel
+Requires=tap@%N.service
+After=tap@%N.service
+
+[Service]
+ExecStart=/usr/local/bin/solo5-hvt --mem=100 --net:service=tap-%N -- /srv/unikernels/%N.hvt \
+	  --ipv4 147.75.34.226/27 --ipv4-gateway 147.75.34.225 --host 147.75.34.226
+
+[Install]
+WantedBy=multi-user.target
+</code></pre><ol>
+<li>Change the <code>--ipv4</code> option to an unused IP address in the public address block
+(check the other unikernels to find one that is free).</li>
+<li>Replace <code>--host</code> in this example with whatever options the unikernel requires.</li>
+<li>Change the <code>--mem=</code> option to however much RAM the unikernel should have.</li>
+</ol>
+<p>Then: <code>systemctl daemon-reload</code> and <code>systemctl enable mirage-www</code></p>
+<p>Finally, edit <code>src/pipeline.ml</code> so that the deployer will deploy the unikernel automatically.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

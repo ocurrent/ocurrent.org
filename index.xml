@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Welcome to OCurrent on OCurrent</title>
+    <link>https://www.ocurrent.org/</link>
+    <description>Recent content in Welcome to OCurrent on OCurrent</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 22 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://www.ocurrent.org/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Build a website deployer with OCurrent</title>
+      <link>https://www.ocurrent.org/docs/tutorials/build-gatsby-deployer.md/</link>
+      <pubDate>Fri, 22 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/tutorials/build-gatsby-deployer.md/</guid>
+      <description>Only using OCurrent plugins learn how to do some continuous deployment.</description>
+    </item>
+    <item>
+      <title>Introduction to incrementalism in OCurrent</title>
+      <link>https://www.ocurrent.org/docs/tutorials/introduction-incremntalism-ocurrrent/</link>
+      <pubDate>Fri, 22 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/tutorials/introduction-incremntalism-ocurrrent/</guid>
+      <description>An introduction to the way OCurrent allows you to build incremental builds.</description>
+    </item>
+    <item>
+      <title>OBuilder</title>
+      <link>https://www.ocurrent.org/docs/tutorials/obuilder/</link>
+      <pubDate>Fri, 22 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/tutorials/obuilder/</guid>
+      <description>A reliable build environment.</description>
+    </item>
+    <item>
+      <title>OCluster</title>
+      <link>https://www.ocurrent.org/docs/tutorials/ocluster/</link>
+      <pubDate>Fri, 22 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/tutorials/ocluster/</guid>
+      <description>Capnp powered distributed CI builds.</description>
+    </item>
+    <item>
+      <title>OCaml-CI: A Zero-Configuration CI</title>
+      <link>https://www.ocurrent.org/docs/conf-and-papers/ocaml-ci-zero-conf/</link>
+      <pubDate>Fri, 28 Aug 2020 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/conf-and-papers/ocaml-ci-zero-conf/</guid>
+      <description>An overview of the OCaml-CI at the OCaml Workshop 2020</description>
+    </item>
+    <item>
+      <title>CI/CD Pipelines: Monad, Arrow or Dart</title>
+      <link>https://www.ocurrent.org/blog/cicd-pipeline/</link>
+      <pubDate>Thu, 14 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/blog/cicd-pipeline/</guid>
+      <description>In this post I describe three approaches to building a language for writing CI/CD pipelines. My first attempt used a monad, but this prevented static analysis of the pipelines. I then tried using an arrow, but found the syntax very difficult to use&amp;hellip;</description>
+    </item>
+    <item>
+      <title>Build matrix</title>
+      <link>https://www.ocurrent.org/examples/02/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/examples/02/</guid>
+      <description>Builds on multiple compiler versions</description>
+    </item>
+    <item>
+      <title>Deploy on Docker</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/docker-deployment/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/docker-deployment/</guid>
+      <description>How to deploy your own CI with Docker.</description>
+    </item>
+    <item>
+      <title>Development notes</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/dev/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/dev/</guid>
+      <description>How to setup a development environment for OCaml CI.</description>
+    </item>
+    <item>
+      <title>Docker build local</title>
+      <link>https://www.ocurrent.org/examples/01/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/examples/01/</guid>
+      <description>Simple sequential pipeline</description>
+    </item>
+    <item>
+      <title>Example pipelines</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/example_pipelines/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/example_pipelines/</guid>
+      <description>Some example pipelines in OCurrent</description>
+    </item>
+    <item>
+      <title>Internal overview</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/internals/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/internals/</guid>
+      <description>How OCurrent work under the hood</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/docker-base-images/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/docker-base-images/readme/</guid>
+      <description>Description about what is the purpose of docker-base-images.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/readme/</guid>
+      <description>What is OCaml CI and how to use it.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/ocaml-docs-ci/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-docs-ci/readme/</guid>
+      <description>How OCaml Docs CI works.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/ocaml-multicore-ci/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-multicore-ci/readme/</guid>
+      <description>What is and how to run ocaml-multicore-ci.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/ocurrent-deployer/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent-deployer/readme/</guid>
+      <description>Explanations about ocurrent-deployer.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/opam-health-check/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/opam-health-check/readme/</guid>
+      <description>What is the purpose of opam-health-check and how to use it.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/opam-repo-ci/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/opam-repo-ci/readme/</guid>
+      <description>Informations about what is opam-repo-ci.</description>
+    </item>
+    <item>
+      <title>The build cache</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/disk_cache/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/disk_cache/</guid>
+      <description>How the build cache is stored</description>
+    </item>
+    <item>
+      <title>VM Host Machine</title>
+      <link>https://www.ocurrent.org/docs/ocurrent-deployer/vm-host/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent-deployer/vm-host/</guid>
+      <description>How to setup a VM to use your own deployer.</description>
+    </item>
+    <item>
+      <title>Write your own plugin</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/writing_plugins/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/writing_plugins/</guid>
+      <description>How to write your own plugin in OCurrent</description>
+    </item>
+  </channel>
+</rss>

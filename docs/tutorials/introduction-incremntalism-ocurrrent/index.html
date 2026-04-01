@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Introduction to incrementalism in OCurrent</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/tutorials/introduction-incremntalism-ocurrrent/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Introduction to incrementalism in OCurrent">
+  <meta property="og:description" content="An introduction to the way OCurrent allows you to build incremental builds.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+    <meta property="article:published_time" content="2021-01-22T00:00:00+00:00">
+    <meta property="article:modified_time" content="2021-01-22T00:00:00+00:00">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Introduction to incrementalism in OCurrent</h1>
+
+
+<p>Welcome to the beginning of theses docs on building things with OCurrent &ndash; an OCaml DSL for generating incremental pipelines to build&hellip; well almost anything. This introductory chapter will give a solid understanding of the foundation upon which the OCurrent tower stands including:</p>
+<ul>
+<li>The core eDSL features and how it achieves incrementalism</li>
+<li>The notion of an OCurrent plugin</li>
+<li>The broad overview of the suite of existing OCurrent features</li>
+</ul>
+<h2 id="why-be-incremental">Why be incremental?</h2>
+<p>An incremental approach to building is used within and outside software development. Not only does it allow for steady progress to be made, but also responsive and fast rebuilding in the face of changes. If you want to paint a wall yellow, you don&rsquo;t tear down the building and start from scratch!</p>
+<p>Incrementalism nearly always provides:</p>
+<ul>
+<li>Faster rebuilds</li>
+<li>Less resource-intensive lifetimes of applications</li>
+</ul>
+<p>This provides users with a better experience (almost instant continuous integration from a hot pipeline) and puts the resources to good use!</p>
+<p>For an incremental approach to work well, individual commands or steps need to have a good understanding of their dependencies in order to react if they change. This is provided by OCurrent in the eDSL (more on that later). But you can think of it like any process which reacts to a changing dependency &ndash; your heating turning off when the thermometer reaches a certain temperature or your git repository rebuilding when the main <code>ref</code> changes.</p>
+<p>With this added reactivity, the incremental process not only has the afore mentioned benefits but now it has a real sense of automation too!</p>
+<p>We have seen the underlying mechanism for providing incrementalism in OCurrent (<code>Current_incr</code> and <code>Term</code>). Now we&rsquo;ll look at the high-level, user-facing library where we have the full-power of asynchronous programming to build pipelines.</p>
+<h2 id="current">Current</h2>
+<p><code>Current</code> is the intended library for users to interact with. We&rsquo;ll take a look at its core modules which provided a meaningful way to program incrementally and asynchronously. But first&hellip; let&rsquo;s rewrite <code>plus</code> in <code>Current</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;current&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nn">Current</span><span class="p">.</span><span class="nc">Syntax</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">plus</span> <span class="n">a</span> <span class="n">b</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="k">open</span> <span class="nc">Current</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="n">component</span> <span class="s2">&#34;PLUS&#34;</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span><span class="o">**</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+</span></span><span class="line"><span class="cl">    <span class="ow">and</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">      <span class="n">return</span> <span class="o">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">plus</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current</span><span class="p">.</span><span class="n">term</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current</span><span class="p">.</span><span class="n">term</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current</span><span class="p">.</span><span class="n">term</span> <span class="o">=</span> <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>And now we can run this inside the <code>Current.Engine</code> on a thread. The major difference now is how we generate our changeable inputs, the <code>a</code> and the <code>b</code> from before. Now we have to use the functor.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">CInt</span> <span class="o">=</span> <span class="nn">Current</span><span class="p">.</span><span class="nc">Var</span> <span class="o">(</span><span class="k">struct</span>
+</span></span><span class="line"><span class="cl">  <span class="k">include</span> <span class="nc">Int</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">pp</span> <span class="o">=</span> <span class="nn">Format</span><span class="p">.</span><span class="n">pp_print_int</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">CInt</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current</span><span class="p">.</span><span class="n">term</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">create</span> <span class="o">:</span> <span class="n">name</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">set</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">unit</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">update</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="kt">int</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="kt">unit</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span></code></pre></div><p>From the signature you can also see we need a way to work with <code>Current_term.Output.t</code>s &ndash;</p>
+<p>Largely based on the very <a href="https://github.com/ocurrent/ocurrent/wiki/Internals">excellent write-up</a> by Thomas Leonard.</p>
+<p>An embedded domain specific language (eDSL) is a set of primitive values and functions written in a host-language to enable a programming experience of a new language. For those old enough, think <code>jQuery</code>. Within OCurrent the entire eDSL lives in the <code>Current_incr</code> package.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;current_incr&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="o">=</span> <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>As with a lot of things in OCaml, the eDSL takes on this <em>monadic</em> look as it wraps things up into its on type (thinks <code>'a list</code> or <code>'a Lwt.t</code>).</p>
+<h2 id="a-simple-arithmetic-example">A simple arithmetic example</h2>
+<p>The result of a <code>plus</code> operator has two dependencies, the operands.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">plus</span> <span class="n">a</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">plus</span> <span class="o">:</span> <span class="kt">int</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="o">=</span> <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>Nothing too surprising here, but what if we want to make this incremental so that it updates if <code>a</code> or <code>b</code> change. At this point <code>a</code> and <code>b</code> must be incremental values (i.e. <code>int Current_incr.t</code>).</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">plus</span> <span class="n">a</span> <span class="n">b</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="k">open</span> <span class="nc">Current_incr</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="n">read</span> <span class="n">a</span> <span class="o">(</span><span class="k">fun</span> <span class="n">a</span> <span class="o">-&gt;</span> <span class="n">read</span> <span class="n">b</span> <span class="o">(</span><span class="k">fun</span> <span class="n">b</span> <span class="o">-&gt;</span> <span class="n">write</span> <span class="o">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">)))</span> <span class="o">|&gt;</span> <span class="n">of_cc</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">plus</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="n">3</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">a</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">abstr</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">b</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="n">6</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">b</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">abstr</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">c</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="o">(</span><span class="n">plus</span> <span class="o">(</span><span class="n">of_var</span> <span class="n">a</span><span class="o">)</span> <span class="o">(</span><span class="n">of_var</span> <span class="n">b</span><span class="o">))</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">c</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">abstr</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>Now we can actually have a look at the value we computed using the <code>observe</code> function. Most importantly we can change the dependency variables <code>a</code> and <code>b</code> to a new integer and then run <code>propagate</code> and see the incrementalism happen before our eyes!</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span> <span class="n">c</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="o">=</span> <span class="n">9</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">change</span> <span class="n">a</span> <span class="n">10</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">unit</span> <span class="o">=</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">propagate</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">unit</span> <span class="o">=</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span> <span class="n">c</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="o">=</span> <span class="n">16</span>
+</span></span></code></pre></div><h2 id="abstracting-away">Abstracting away</h2>
+<p>The primitives for incrementalism are small and easy to understand, but not ideal for building larger applications. For one it would be nice to know ahead of time (statically) what are computation graph looks like. It would also be nice to incorporate <code>('a, 'b) Result.t</code> style exception handling because&hellip; things go wrong.</p>
+<p>This is exactly what <code>current.term</code> and eventually <code>Current</code> do! The <code>Term</code> module provides the static analysis and error handling whilst the final user-facing <code>Current</code> module provides asynchronous computations using <code>Lwt</code> and persistent logging. But first <code>Term</code>.</p>
+<h3 id="term-module">Term Module</h3>
+<p>To build our usable <code>Term</code> module, we need to use the function <code>Current_term.Make</code>. It expects the simplest of module arguments:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;current.term&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">show</span> <span class="nc">Current_term</span>
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">Current_term</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">S</span> <span class="o">=</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nc">S</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Output</span> <span class="o">=</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nc">Output</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Make</span> <span class="o">:</span> <span class="k">functor</span> <span class="o">(</span><span class="nc">Metadata</span> <span class="o">:</span> <span class="k">sig</span> <span class="k">type</span> <span class="n">t</span> <span class="k">end</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">sig</span> <span class="o">...</span> <span class="k">end</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span></code></pre></div><p>Something with a type <code>t</code>. This is used (as the argument name helpfully points out) for <code>Metadata</code> information. For now it isn&rsquo;t too important.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">Term</span> <span class="o">=</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nc">Make</span> <span class="o">(</span><span class="nc">Unit</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">Term</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nc">Make</span><span class="o">(</span><span class="nc">Unit</span><span class="o">).</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">description</span> <span class="o">=</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nc">Make</span><span class="o">(</span><span class="nc">Unit</span><span class="o">).</span><span class="n">description</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">active</span> <span class="o">:</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">active</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">return</span> <span class="o">:</span> <span class="o">?</span><span class="n">label</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">fail</span> <span class="o">:</span> <span class="kt">string</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">state</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="o">?</span><span class="n">hidden</span><span class="o">:</span><span class="kt">bool</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">      <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">      <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span><span class="o">,</span> <span class="o">[</span> <span class="o">`</span><span class="nc">Active</span> <span class="k">of</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">active</span> <span class="o">|</span> <span class="o">`</span><span class="nc">Msg</span> <span class="k">of</span> <span class="kt">string</span> <span class="o">])</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">      <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">catch</span> <span class="o">:</span> <span class="o">?</span><span class="n">hidden</span><span class="o">:</span><span class="kt">bool</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">S</span><span class="p">.</span><span class="n">or_error</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">ignore_value</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">of_output</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">map</span> <span class="o">:</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">map_error</span> <span class="o">:</span> <span class="o">(</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="kt">string</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">pair</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">*</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">list_map</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="o">(</span><span class="k">module</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">S</span><span class="p">.</span><span class="nc">ORDERED</span> <span class="k">with</span> <span class="k">type</span> <span class="n">t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">a</span><span class="o">)</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">      <span class="o">?</span><span class="n">collapse_key</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="kt">list</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="kt">list</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">list_iter</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="o">(</span><span class="k">module</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">S</span><span class="p">.</span><span class="nc">ORDERED</span> <span class="k">with</span> <span class="k">type</span> <span class="n">t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">a</span><span class="o">)</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">      <span class="o">?</span><span class="n">collapse_key</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="kt">list</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">list_seq</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="kt">list</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="kt">list</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">option_map</span> <span class="o">:</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">option</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">option</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">option_seq</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="n">option</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">option</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">all</span> <span class="o">:</span> <span class="kt">unit</span> <span class="n">t</span> <span class="kt">list</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">all_labelled</span> <span class="o">:</span> <span class="o">(</span><span class="kt">string</span> <span class="o">*</span> <span class="kt">unit</span> <span class="n">t</span><span class="o">)</span> <span class="kt">list</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">gate</span> <span class="o">:</span> <span class="n">on</span><span class="o">:</span><span class="kt">unit</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">collapse</span> <span class="o">:</span> <span class="n">key</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="k">value</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="n">input</span><span class="o">:</span><span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">with_context</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="kt">unit</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">bind</span> <span class="o">:</span> <span class="o">?</span><span class="n">info</span><span class="o">:</span><span class="n">description</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">primitive</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">        <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">*</span> <span class="kt">unit</span> <span class="n">option</span><span class="o">)</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">primitive</span> <span class="o">:</span> <span class="n">info</span><span class="o">:</span><span class="n">description</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">primitive</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">component</span> <span class="o">:</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span><span class="o">,</span> <span class="nn">Format</span><span class="p">.</span><span class="n">formatter</span><span class="o">,</span> <span class="kt">unit</span><span class="o">,</span> <span class="n">description</span><span class="o">)</span> <span class="n">format4</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Syntax</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="k">let</span><span class="o">+</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="ow">and</span><span class="o">+</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">*</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="k">let</span><span class="o">*</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="k">let</span><span class="o">&gt;</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">primitive</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">description</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="k">let</span><span class="o">**</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">description</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="ow">and</span><span class="o">*</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">*</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="o">(</span> <span class="ow">and</span><span class="o">&gt;</span> <span class="o">)</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">*</span> <span class="k">&#39;</span><span class="n">b</span><span class="o">)</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">end</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Analysis</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="n">metadata</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="n">option</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="n">pp</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="nn">Fmt</span><span class="p">.</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="n">pp_dot</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">          <span class="n">env</span><span class="o">:(</span><span class="kt">string</span> <span class="o">*</span> <span class="kt">string</span><span class="o">)</span> <span class="kt">list</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">collapse_link</span><span class="o">:(</span><span class="n">k</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="n">v</span><span class="o">:</span><span class="kt">string</span> <span class="o">-&gt;</span> <span class="kt">string</span> <span class="n">option</span><span class="o">)</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">          <span class="n">job_info</span><span class="o">:(</span><span class="kt">unit</span> <span class="o">-&gt;</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">active</span> <span class="n">option</span> <span class="o">*</span> <span class="kt">string</span> <span class="n">option</span><span class="o">)</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">          <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="nn">Fmt</span><span class="p">.</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">        <span class="k">val</span> <span class="n">stats</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nn">S</span><span class="p">.</span><span class="n">stats</span>
+</span></span><span class="line"><span class="cl">      <span class="k">end</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Executor</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">      <span class="k">sig</span> <span class="k">val</span> <span class="n">run</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="k">end</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span></code></pre></div><p>Now that we have a <code>Term</code> module we can rebuild our <code>plus</code> operator from earlier.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nn">Term</span><span class="p">.</span><span class="nc">Syntax</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">plus</span> <span class="n">a</span> <span class="n">b</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Term</span><span class="p">.</span><span class="n">component</span> <span class="s2">&#34;PLUS&#34;</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span><span class="o">**</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+</span></span><span class="line"><span class="cl">  <span class="ow">and</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">plus</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>Wahhh what&rsquo;s this crazy <code>let**</code> syntax? Since <a href="https://caml.inria.fr/pub/docs/manual-ocaml/bindingops.html">OCaml 4.08</a> we&rsquo;ve had binding operators. Just like you can define infix operators such as <code>( &gt;&gt;= )</code> these operators are very similar except they happen on the <code>let</code> bindings.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Syntax</span><span class="p">.</span><span class="o">(</span> <span class="k">let</span><span class="o">**</span> <span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="k">&#39;</span><span class="n">a</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">description</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">b</span> <span class="nn">Term</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="o">&lt;</span><span class="k">fun</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>As you can see it is just our friendly bind operator with a way for passing a description (more on that later). Give me something wrapped up in something and a function that works on the wrapped up thing, and I&rsquo;ll give you that function applied to the inner value wrapped up.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">res</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="n">3</span> <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="s2">&#34;a&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">b</span> <span class="o">=</span> <span class="n">7</span> <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="s2">&#34;a&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span> <span class="o">(</span><span class="n">plus</span> <span class="n">a</span> <span class="n">b</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="n">res</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">abstr</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span> <span class="n">res</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Ok</span> <span class="n">10</span>
+</span></span></code></pre></div><p>Here we also see the result type making it&rsquo;s way in. <code>Term</code> also gives us a way to fail too.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span> <span class="o">(</span><span class="nn">Term</span><span class="p">.</span><span class="n">fail</span> <span class="s2">&#34;Woops!&#34;</span> <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Error</span> <span class="o">(`</span><span class="nc">Msg</span> <span class="s2">&#34;Woops!&#34;</span><span class="o">)</span>
+</span></span></code></pre></div><p>Of course inside a pipeline we might not know if something has failed or not, in which case we can expose the underlying result using <code>Term.catch</code> and pattern-match on <code>Ok</code> and <code>Error</code>.</p>
+<h3 id="the-extra-metadata">The Extra Metadata</h3>
+<p>One of the original goals of OCurrent was not only to build incremental pipelines but to expose them to users. The <code>Term</code> library (under the hood) is adding extra metadata and static analysis to be able to generate useful graphics and information. For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="n">3</span> <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="s2">&#34;Operand 1&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">b</span> <span class="o">=</span> <span class="n">4</span> <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="s2">&#34;Operand 2&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Format</span><span class="p">.</span><span class="n">printf</span> <span class="s2">&#34;%a@.&#34;</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Analysis</span><span class="p">.</span><span class="n">pp</span> <span class="o">(</span><span class="n">plus</span> <span class="n">a</span> <span class="n">b</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="nc">Operand</span> <span class="n">1</span>
+</span></span><span class="line"><span class="cl"><span class="o">||</span>
+</span></span><span class="line"><span class="cl"><span class="nc">Operand</span> <span class="n">2</span> <span class="o">&gt;&gt;=</span>
+</span></span><span class="line"><span class="cl"><span class="nc">PLUS</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">unit</span> <span class="o">=</span> <span class="bp">()</span>
+</span></span></code></pre></div><p>Now, hopefully, it becomes apparent why the <code>component &quot;PLUS&quot;</code> and the <code>let**</code> operator were needed.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

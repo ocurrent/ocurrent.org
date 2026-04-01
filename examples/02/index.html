@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Build matrix</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/examples/02/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Build matrix">
+  <meta property="og:description" content="Builds on multiple compiler versions">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="examples">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<div id="topline">
+    <h1>Build matrix</h1>
+    
+    <p class="summary">Builds on multiple compiler versions</p>
+    
+</div>
+
+
+<p><a href="https://github.com/talex5/ocurrent/blob/master/examples/build_matrix.ml">build_matrix.ml</a> contains a slightly more advanced pipeline:</p>
+<p><img src="/examples/example2.svg" alt="example2"></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="k">let</span> <span class="n">weekly</span> <span class="o">=</span> <span class="nn">Current_cache</span><span class="p">.</span><span class="nn">Schedule</span><span class="p">.</span><span class="n">v</span> <span class="o">~</span><span class="n">valid_for</span><span class="o">:(</span><span class="nn">Duration</span><span class="p">.</span><span class="n">of_day</span> <span class="n">7</span><span class="o">)</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c">(* Run &#34;docker build&#34; on the latest commit in Git repository [repo]. *)</span>
+</span></span><span class="line"><span class="cl"><span class="k">let</span> <span class="n">pipeline</span> <span class="o">~</span><span class="n">repo</span> <span class="bp">()</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">src</span> <span class="o">=</span> <span class="nn">Git</span><span class="p">.</span><span class="nn">Local</span><span class="p">.</span><span class="n">head_commit</span> <span class="n">repo</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">base</span> <span class="o">=</span> <span class="nn">Docker</span><span class="p">.</span><span class="n">pull</span> <span class="o">~</span><span class="n">schedule</span><span class="o">:</span><span class="n">weekly</span> <span class="s2">&#34;ocaml/opam2&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">build</span> <span class="n">ocaml_version</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">dockerfile</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">      <span class="k">let</span><span class="o">+</span> <span class="n">base</span> <span class="o">=</span> <span class="n">base</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">      <span class="n">dockerfile</span> <span class="o">~</span><span class="n">base</span> <span class="o">~</span><span class="n">ocaml_version</span>
+</span></span><span class="line"><span class="cl">    <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">build</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="n">ocaml_version</span> <span class="o">~</span><span class="n">pull</span><span class="o">:</span><span class="bp">false</span> <span class="o">~</span><span class="n">dockerfile</span> <span class="n">src</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">tag</span> <span class="o">~</span><span class="n">tag</span><span class="o">:(</span><span class="nn">Fmt</span><span class="p">.</span><span class="n">strf</span> <span class="s2">&#34;example-%s&#34;</span> <span class="n">ocaml_version</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Current</span><span class="p">.</span><span class="n">all</span> <span class="o">[</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.07&#34;</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.08&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="o">]</span>
+</span></span></code></pre></div><p>The <code>Docker.pull</code> step shows the use of a <em>schedule</em>. In this case, we consider
+a pulled image to be valid for one week; after that OCurrent will automatically
+run the <code>docker pull</code> again to check for newer versions.</p>
+<p>It uses <code>Current.all</code> to build against different versions of OCaml, generating
+a suitable Dockerfile for each version (the <code>ocaml/opam2</code> image contains multiple
+versions of the compiler and the Dockerfile just selects one of them).</p>
+<p>The generated images are then tagged with the compiler version used to build them.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

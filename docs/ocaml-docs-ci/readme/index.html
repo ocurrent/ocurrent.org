@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Readme</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocaml-docs-ci/readme/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Readme">
+  <meta property="og:description" content="How OCaml Docs CI works.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Readme</h1>
+
+
+<h1 id="docs-ci">Docs CI</h1>
+<p><a href="https://ocaml.ci.dev/github/ocurrent/ocaml-docs-ci"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Focaml.ci.dev%2Fbadge%2Focurrent%2Focaml-docs-ci%2Fmain&amp;logo=ocaml" alt="OCaml-CI Build Status"></a></p>
+<p>OCaml Docs CI (aka ocaml-docs-ci or just docs-ci) is an OCurrent pipeline used to build the documentation for ocaml.org website.
+It uses the metadata from opam-repository to work out how to build documentation for individual packages using <a href="https://github.com/ocaml-doc/voodoo">voodoo</a>, the OCaml package documentation generator, and generates a HTML output suitable for ocaml.org server.</p>
+<h2 id="installation">Installation</h2>
+<p>Get the code with:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">git clone --recursive https://github.com/ocurrent/ocaml-docs-ci.git
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> ocaml-docs-ci
+</span></span></code></pre></div><p>Then you need an opam 2.1 switch using OCaml 4.14. Recommend using this command to setup a local switch just for <code>docs-ci</code>.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># Create a local switch with packages and test dependencies installed</span>
+</span></span><span class="line"><span class="cl">opam switch create . 4.14.1 --deps-only --with-test -y
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Run the build</span>
+</span></span><span class="line"><span class="cl">dune build
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Run the tests</span>
+</span></span><span class="line"><span class="cl">dune build @runtest
+</span></span></code></pre></div><h2 id="architecture">Architecture</h2>
+<p>At a high level <code>docs-ci</code> purpose is to compile the documentation of every package in the <code>opamverse</code>. To do this it generates
+a dependency universe. For each package (along with the version), the documentation is generated for it plus all of its
+dependencies. This documentation is then collected into a <code>documentation set</code> and provided to the ocaml.org service.
+The <a href="https://github.com/ocaml-doc/voodoo">voodoo</a> tool defines the on disk format for the <code>documentation set</code>.</p>
+<p>For further details on how <code>docs-ci</code> works read the <a href="doc/pipeline-diagram.md">pipeline diagram</a>.</p>
+<h2 id="deployment">Deployment</h2>
+<p><code>ocaml-docs-ci</code> is deployed as into two environments, with <a href="https://deploy.ci.ocaml.org/?repo=ocurrent/ocaml-docs-ci&amp;">ocurrent-deployer</a>. The application is deployed as a series of Docker containers from a git branch.</p>
+<p>Environments:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Environment</th>
+          <th>www</th>
+          <th>pipeline</th>
+          <th>git branch</th>
+          <th>data</th>
+          <th>voodoo branch</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Production</td>
+          <td><a href="https://ocaml.org">https://ocaml.org</a></td>
+          <td><a href="https://docs.ci.ocaml.org">https://docs.ci.ocaml.org</a></td>
+          <td>live</td>
+          <td><a href="http://docs-data.ocaml.org">http://docs-data.ocaml.org</a></td>
+          <td>main</td>
+      </tr>
+      <tr>
+          <td>Staging</td>
+          <td><a href="https://staging.ocaml.org">https://staging.ocaml.org</a></td>
+          <td><a href="https://staging.docs.ci.ocaml.org">https://staging.docs.ci.ocaml.org</a></td>
+          <td>staging</td>
+          <td><a href="http://staging.docs-data.ocaml.org">http://staging.docs-data.ocaml.org</a></td>
+          <td>staging</td>
+      </tr>
+  </tbody>
+</table>
+<p>OAuth integration provided by GitHub OAuth Apps hosted under the OCurrent organisation.
+See <a href="https://github.com/organizations/ocurrent/settings/applications">https://github.com/organizations/ocurrent/settings/applications</a></p>
+<p>The infrastructure for <code>docs-ci</code> is managed via Ansible, contact @tmcgilchrist or @mtelvers if you need access or have questions.</p>
+<p>To deploy a new version of <code>docs-ci</code>:</p>
+<ol>
+<li>Create a PR and wait for the GH Checks to run (ocaml-ci compiles the code and ocurrent-deployer checks it can build the Dockerfiles for the project)</li>
+<li>Test the changes on <code>staging</code> environment by git cherry picking the commits to that branch and pushing it</li>
+<li>Check <a href="https://deploy.ci.ocaml.org/?repo=ocurrent/ocaml-docs-ci&amp;">deploy.ci.ocaml.org</a> for <code>docs-ci</code></li>
+</ol>
+<p>Follow a similar process for <code>live</code> exercising extra caution as it could impact the live ocaml.org service.</p>
+<p>The git history on <code>live</code> and <code>staging</code> <strong>MUST</strong> be kept in sync with the default branch.
+Those branches should be the same as <code>main</code> plus or minus some commits from a PR.</p>
+<h2 id="remote-api">Remote API</h2>
+<p><code>docs-ci</code> has a cli tool (<code>ocaml-docs-ci-client</code>) for interacting with the pipeline over CapnP. It provides commands to:</p>
+<ul>
+<li>diff-pipelines - to show the changes between two pipeline runs</li>
+<li>health-check - to provide information about a specific pipeline run</li>
+<li>status - build status of a package</li>
+<li>status-by-pipeline - build status of a package in the two most recent pipeline runs</li>
+<li>steps - build steps of a package</li>
+</ul>
+<p>The output is via json, which is intended to be combined with <code>jq</code> to display and query for pieces of information.</p>
+<h2 id="local-development">Local Development</h2>
+<p><code>ocaml-docs-ci</code> is runable as:</p>
+<pre tabindex="0"><code>dune exec -- ocaml-docs-ci \
+    --ocluster-submission cap/XXX.cap \
+    --ssh-host ci.mirage.io \
+    --ssh-user docs \
+    --ssh-privkey cap/id_rsa \
+    --ssh-pubkey cap/id_rsa.pub \
+    --ssh-folder /data/ocaml-docs-ci \
+    --ssh-endpoint https://ci.mirage.io/staging \
+    --jobs 6 \
+    --filter mirage \
+    --limit 6
+</code></pre><p>A <a href="docker-compose.yml">docker-compose.yml</a> is provided to setup an entire <code>docs-ci</code> environment including:</p>
+<ul>
+<li>ocluster scheduler</li>
+<li>ocluster Linux x86 worker</li>
+<li>nginx webserver for generated docs</li>
+<li>ocaml-docs-ci built from the local git checkout</li>
+</ul>
+<p>Run this command to create an environment:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ docker-compose -f docker-compose.yml up
+</span></span></code></pre></div><p>You should then be able to watch the pipeline in action at <code>http://localhost:8080</code>.</p>
+<h3 id="migrations">Migrations</h3>
+<p>Migrations are managed using <a href="https://github.com/tmattio/omigrate">omigrate</a>. If you are using an opam switch for ocaml-docs-ci then omigrate should be installed and you can create a new migration by doing this from the project root:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ omigrate create --dir migrations &lt;migration-name&gt;
+</span></span></code></pre></div><p>This will create timestamped files in the migrations directory that you can then populate with the sql necessary to introduce and remove the migration (in the up and down files respectively).</p>
+<p>Migrations will not run unless the &ndash;migration-path flag is present when invoking ocaml-docs-ci-service.</p>
+<h3 id="epoch-management">Epoch management</h3>
+<p>Epochs are used in ocaml-docs-ci to organise sets of artifacts all produced by the same odoc/voodoo version.
+There is a cli tool for managing epochs described in <a href="./src/cli/epoch.md">epoch.md</a>.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>
