@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>OCurrent Examples</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/examples/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="OCurrent Examples">
+  <meta property="og:description" content="A set of OCurrent use cases - Better than a toy store">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="website">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<div id="topline">
+    <h1>OCurrent Examples</h1>
+    
+    <hr />
+    <p class="descr">A set of OCurrent use cases - Better than a toy store</p>
+    
+</div>
+
+
+<p>There are a number of services providing CI for the OCaml community.
+The services described here are:</p>
+<ul>
+<li><a href="https://github.com/ocurrent/docker-base-images">docker-base-images</a> &ndash; builds the <a href="https://hub.docker.com/r/ocaml/opam/tags">ocaml/opam</a> images on Docker Hub, which are used for CI at <a href="https://images.ci.ocaml.org">images.ci.ocaml.org</a></li>
+<li><a href="https://github.com/ocurrent/ocaml-ci">ocaml-ci</a> &ndash; CI for OCaml projects at <a href="https://ci.ocamllabs.io">ci.ocamllabs.io</a></li>
+<li><a href="https://github.com/ocurrent/opam-repo-ci">opam-repo-ci</a> &ndash; CI for package submissions to <a href="https://github.com/ocaml/opam-repository">opam-repository</a></li>
+<li><a href="https://github.com/ocurrent/ocurrent-deployer">ocurrent-deployer</a> &ndash; builds and deploys the above services (and itself) <a href="https://deploy.ci3.ocamllabs.io">deploy.ci3.ocamllabs.io</a> or <a href="https://deploy.ci.ocaml.org">deploy.ci.ocaml.org</a></li>
+<li><a href="https://github.com/ocurrent/opam-health-check">opam-health-check</a> &ndash; the opam-repository health checks at <a href="http://check.ocamllabs.io">check.ocamllabs.io</a></li>
+<li><a href="https://github.com/ocurrent/current-bench">current-bench</a> &ndash; Continuous benchmarks for OCaml projects at <a href="https://autumn.ocamllabs.io">autumn.ocamllabs.io</a></li>
+<li><a href="https://github.com/ocurrent/ocaml-multicore-ci">ocaml-multicore-ci</a> &ndash; CI for multicore OCaml projects at <a href="https://multicore.ci.ocamllabs.io">multicore.ci.ocamllabs.io</a></li>
+<li><a href="https://github.com/ocurrent/ocaml-docs-ci">ocaml-docs-ci</a> &ndash; Continuous documentation building for packages in <a href="https://github.com/ocaml/opam-repository">opam-repository</a> at <a href="https://docs.ci.ocaml.org">docs.ci.ocaml.org</a></li>
+<li><a href="https://github.com/tarides/tezos-ci">tezos-ci</a> &ndash; A translation of Tezos&rsquo; Gitlab CI to an OCurrent world.</li>
+</ul>
+<p>Most of the services are <a href="https://github.com/ocurrent/ocurrent">OCurrent</a> pipelines, and all submit jobs to an <a href="https://github.com/ocurrent/ocluster">OCluster</a>
+build cluster, which has builders for x86, ARM and PowerPC architectures.
+Each cluster builder uses <a href="https://github.com/ocurrent/obuilder">OBuilder</a> to run the build jobs.
+The various services communicate using <a href="https://github.com/mirage/capnp-rpc">Cap&rsquo;n Proto RPC</a>.</p>
+<p>Most of the services are deployed using the <a href="https://github.com/ocurrent/ocurrent-deployer">ocurrent-deployer</a> service,
+which is also an OCurrent pipeline.</p>
+<h2 id="ocurrent-pipelines">OCurrent pipelines</h2>
+<p><a href="https://github.com/ocurrent/ocurrent">OCurrent</a> is an OCaml eDSL for creating processing pipelines.</p>
+<p align='center'>
+  <img src="https://raw.githubusercontent.com/ocurrent/ocurrent/master/doc/gated-deploy.svg"/>
+</p>
+<p>For example, the pipeline shown above fetches the head of a GitHub repository&rsquo;s <code>master</code> branch,
+builds it, runs the tests, and deploys the binary if the tests pass.
+OCurrent pipelines are self-adjusting, so when the branch is updated, the pipeline will update automatically.</p>
+<p>For more information on OCurrent, see:</p>
+<ul>
+<li>The <a href="https://github.com/ocurrent/ocurrent/wiki">OCurrent wiki</a> &ndash; the official documentation</li>
+<li><a href="https://github.com/ocurrent/ocurrent-skeleton">ocurrent-skeleton</a> &ndash; a template pipeline you can clone</li>
+<li><a href="https://roscidus.com/blog/blog/2019/11/14/cicd-pipelines/">CI/CD Pipelines: Monad, Arrow or Dart?</a> &ndash; background on OCurrent&rsquo;s design</li>
+</ul>
+<h2 id="docker-images">Docker images</h2>
+<p>The <a href="https://github.com/ocurrent/docker-base-images">docker-base-images</a> service periodically builds Docker images for various Linux distributions,
+OCaml versions, compiler flags, and architectures.</p>
+<p>For example, if you want a Debian 10 system with OCaml 4.13 (trunk) installed,
+configured with the <code>no-flat-float-array</code> option, you could do it like this:</p>
+<pre tabindex="0"><code># docker run --rm -it ocaml/opam:debian-10-ocaml-4.13-no-flat-float-array
+$ ocaml -version
+The OCaml toplevel, version 4.13.0+dev0-2020-10-19
+</code></pre><p>Here is a detail from the pipeline, showing it building some of the Debian 10 / OCaml 4.13 images:</p>
+<p align='center'>
+  <img src="images/docker-pipeline.png"/>
+</p>
+<p>It uses the cluster to build images for <code>i386</code>, <code>x86_64</code>, <code>arm64</code>, <code>arm32</code> and <code>ppc64</code> architectures,
+and then pushes a multi-arch image for them all to Docker Hub, under the tags <code>ocaml/opam:debian-10-ocaml-4.13-no-flat-float-array</code>
+and (because Debian 10 is the latest version of Debian at the moment) <code>ocaml/opam:debian-ocaml-4.13-no-flat-float-array</code>.</p>
+<p>The other services use these images for testing OCaml projects on the various platforms.</p>
+<p>The service is running at <a href="https://images.ci.ocaml.org/">https://images.ci.ocaml.org/</a>, although users do not generally need to interact with it directly.</p>
+<h2 id="testing-ocaml-projects-under-development">Testing OCaml projects under development</h2>
+<p>An OCaml project can enable <a href="https://github.com/ocurrent/ocaml-ci">ocaml-ci</a> on its GitHub repository.
+The CI examines the project&rsquo;s <code>opam</code> files to work out what needs to be built and which platforms the project supports.
+It will then use the cluster to install and test the software on the supported platforms.
+No configuration is needed besides enabling the service.
+ocaml-ci aims to find problems in the software before it is released.</p>
+<p>The CI engine provides a Cap&rsquo;n Proto API, which is used to provide various user-interfaces:</p>
+<ul>
+<li>A web front-end, at <a href="https://ci.ocamllabs.io/">https://ci.ocamllabs.io/</a></li>
+<li>A command-line interface (e.g. <code>ocaml-ci mirage/irmin refs/heads/master alpine-3.12-4.11 log</code> to show the log of the last build of the Irmin project&rsquo;s master branch on Alpine 3.12 with OCaml 4.11).</li>
+<li><a href="https://github.com/ocurrent/citty">citty</a>, an interactive console application.</li>
+</ul>
+<p align='center'>
+  <img src="images/ocaml-ci-web.png"/>
+</p>
+<p>If you would like to try ocaml-ci on your project locally first (using a local Docker instance rather than a cluster),
+you can run the <code>ocaml-ci-local</code> command to do that, e.g.</p>
+<pre tabindex="0"><code>ocaml-ci-local /path/to/my-project
+</code></pre><p>Then browse to <a href="http://localhost:8080/">http://localhost:8080/</a> to see the state of the pipeline.
+You&rsquo;ll see something like this:</p>
+<p align='center'>
+  <img src="images/ocaml-ci-local.png"/>
+</p>
+<p>This pipeline pulls in the Docker images for the various test platforms (here just a few versions of OCaml on Debian are shown),
+fetches the latest version of opam-reposory, and gets the head commit of the project&rsquo;s current Git branch.
+The Analyse step then runs a solver to find which packages are needed to build the head commit on each platform, using
+opam-repository to get the versions.
+Finally, it builds and tests on each supported platform.</p>
+<h2 id="publishing-in-opam-repository">Publishing in opam-repository</h2>
+<p>A developer starts the release process by running <a href="https://github.com/ocamllabs/dune-release">dune-release</a>, which
+creates a GitHub release of the project and opens a PR on <a href="https://github.com/ocaml/opam-repository">opam-repository</a>.
+<a href="https://github.com/ocurrent/opam-repo-ci">opam-repo-ci</a> will then test each package in the release against the various supported platforms.
+If these tests pass, it will also find all packages in the repository that depend on the newly released
+package and build and test those too.</p>
+<p>The running service can be found at <a href="https://opam.ci.ocaml.org/github/ocaml/opam-repository">https://opam.ci.ocaml.org/github/ocaml/opam-repository</a>.</p>
+<p align='center'>
+  <img src="images/opam-repo-ci.png"/>
+</p>
+<h3 id="publishing-documentation">Publishing documentation</h3>
+<p>After publishing a package to <a href="https://github.com/ocaml/opam-repository">opam-repository</a>, the <a href="https://github.com/ocurrent/ocaml-docs-ci">ocaml-docs-ci</a> pipeline picks up the changes and begins
+building the documentation for the package. This allows for correct linking across a package&rsquo;s dependencies. The documentation is then viewable on the new <a href="https://v3.ocaml.org/packages">OCaml website</a>.</p>
+<h2 id="checking-the-health-of-opam-repository">Checking the health of opam-repository</h2>
+<p>Once a release has been accepted into opam-repository, <a href="https://github.com/ocurrent/opam-health-check">opam-health-check</a> is run periodically to check
+that all the packages still build.
+It is also used when preparing a large change (such as making a new release of the OCaml compiler).</p>
+<p align='center'>
+  <img src="images/opam-health-check.png"/>
+</p>
+<p>The results of the latest run can be seen at <a href="http://check.ocamllabs.io/">http://check.ocamllabs.io/</a>.</p>
+<h2 id="updating-services-with-the-deployer">Updating services with the deployer</h2>
+<p>To deploy a new version of one of the above services, we push to a specific branch in the project&rsquo;s repository.
+For example, to deploy a new version of docker-base-images, you push to the <code>live</code> branch in that repository.
+The <a href="https://github.com/ocurrent/ocurrent-deployer">ocurrent-deployer</a> pipeline will detect this, build a new version of the service, push it to Docker Hub, and
+then update the running service to that version.
+It will post the status of the deployment to the <code>#ci-firehose</code> channel on the OCaml Labs Slack instance,
+using OCurrent&rsquo;s Slack plugin.</p>
+<p>This detail from the pipeline shows the deployment pipeline for the <code>staging-www</code> branch, which deploys that
+branch to a staging location for testing changes to the web UI:</p>
+<p align='center'>
+  <img src="images/deployer.png"/>
+</p>
+<p>The services are mostly running under Docker SwarmKit, and are updated using OCurrent&rsquo;s Docker plugin.</p>
+<p>There are deployer instances at <a href="https://deploy.ocamllabs.io/">https://deploy.ocamllabs.io/</a> and <a href="https://deploy.ci3.ocamllabs.io/">https://deploy.ci3.ocamllabs.io/</a>.</p>
+<h2 id="monitoring">Monitoring</h2>
+<p>Services export metrics using the <a href="https://github.com/mirage/prometheus">prometheus</a> library, which are collected in a Prometheus service
+and displayed using <a href="https://grafana.com/">grafana</a>.</p>
+<p align='center'>
+  <img src="images/grafana-ocluster.png"/>
+</p>
+<h2 id="benchmarking">Benchmarking</h2>
+<p>An OCaml project can enable <a href="https://github.com/ocurrent/current-bench">current-bench</a> on its GitHub repository. The repository needs to have a Makefile target named <code>bench</code>
+since that is triggered inside the ocurrent pipeline in <a href="https://github.com/ocurrent/current-bench">current-bench</a>. The repository also needs to emit the benchmarks in a JSON format so that they can be displayed on the <a href="http://autumn.ocamllabs.io">frontend</a>.</p>
+<p align='center'>
+<img src="images/current-bench.png"/>
+</p>
+
+
+<h2>Details examples:</h2>
+<ul>
+    
+    <li>
+        <h3><a href="https://www.ocurrent.org/examples/02/">Build matrix</a></h3>
+        
+    </li>
+    
+    <li>
+        <h3><a href="https://www.ocurrent.org/examples/01/">Docker build local</a></h3>
+        
+    </li>
+    
+</ul>
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

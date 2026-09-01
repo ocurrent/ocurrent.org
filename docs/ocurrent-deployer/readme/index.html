@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Readme</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent-deployer/readme/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Readme">
+  <meta property="og:description" content="Explanations about ocurrent-deployer.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Readme</h1>
+
+
+<h1 id="deployer">Deployer</h1>
+<p>This repository contains an <a href="https://github.com/ocurrent/ocurrent">OCurrent</a> pipeline for deploying the
+various other pipelines we use. When a new commit is pushed to the
+<code>live</code> branch of a source repository, it builds a new Docker image
+for the project and upgrades the service to that version.</p>
+<p>The list of deployed services is located in <a href="./doc/services.md">doc/services.md</a>.</p>
+<p>The main configuration is in <a href="./src/pipeline.ml">pipeline.ml</a>. For example, one entry is:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl">      <span class="n">ocurrent</span><span class="o">,</span> <span class="s2">&#34;docker-base-images&#34;</span><span class="o">,</span> <span class="o">[</span>
+</span></span><span class="line"><span class="cl">        <span class="c">(* Docker base images @ images.ci.ocaml.org *)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">make_docker</span>
+</span></span><span class="line"><span class="cl">          <span class="s2">&#34;Dockerfile&#34;</span>
+</span></span><span class="line"><span class="cl">          <span class="o">[</span>
+</span></span><span class="line"><span class="cl">            <span class="n">make_deployment</span>
+</span></span><span class="line"><span class="cl">              <span class="o">~</span><span class="n">branch</span><span class="o">:</span><span class="s2">&#34;live&#34;</span>
+</span></span><span class="line"><span class="cl">              <span class="o">~</span><span class="n">target</span><span class="o">:</span><span class="s2">&#34;ocurrent/base-images:live&#34;</span>
+</span></span><span class="line"><span class="cl">              <span class="o">[`</span><span class="nc">Ocamlorg_images</span> <span class="s2">&#34;base-images_builder&#34;</span><span class="o">];</span>
+</span></span><span class="line"><span class="cl">          <span class="o">];</span>
+</span></span><span class="line"><span class="cl">      <span class="o">];</span>
+</span></span></code></pre></div><p>This says that for the <a href="https://github.com/ocurrent/docker-base-images">https://github.com/ocurrent/docker-base-images</a> repository:</p>
+<ul>
+<li>A deployment is registered monitoring the branch <code>live</code>.</li>
+<li>The deployment will use Docker to build the project&rsquo;s <code>Dockerfile</code> (and report
+the status on GitHub for each branch and PR).</li>
+<li>The deployments will publish the build image on Docker Hub as
+<code>ocurrent/base-images:live</code>.</li>
+<li>It will deploy the image as a service according to <code>Ocamlorg_images &quot;base-images_builder&quot;</code> (see <a href="src/cluster.ml">cluster.ml</a>).</li>
+</ul>
+<p>The pipeline also deploys some <a href="https://mirageos.org/">MirageOS</a> unikernels, e.g.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="n">mirage</span><span class="o">,</span> <span class="s2">&#34;mirage-www&#34;</span><span class="o">,</span> <span class="o">[</span>
+</span></span><span class="line"><span class="cl">  <span class="n">unikernel</span> <span class="s2">&#34;Dockerfile&#34;</span> <span class="o">~</span><span class="n">target</span><span class="o">:</span><span class="s2">&#34;hvt&#34;</span> <span class="o">[</span><span class="s2">&#34;EXTRA_FLAGS=--tls=true&#34;</span><span class="o">]</span> <span class="o">[</span><span class="s2">&#34;master&#34;</span><span class="o">,</span> <span class="s2">&#34;www&#34;</span><span class="o">];</span>
+</span></span><span class="line"><span class="cl">  <span class="n">unikernel</span> <span class="s2">&#34;Dockerfile&#34;</span> <span class="o">~</span><span class="n">target</span><span class="o">:</span><span class="s2">&#34;xen&#34;</span> <span class="o">[</span><span class="s2">&#34;EXTRA_FLAGS=--tls=true&#34;</span><span class="o">]</span> <span class="bp">[]</span><span class="o">;</span>     <span class="c">(* (no deployments) *)</span>
+</span></span><span class="line"><span class="cl"><span class="o">];</span>
+</span></span></code></pre></div><p>This builds each branch and PR of <a href="https://github.com/mirage/mirage-www">https://github.com/mirage/mirage-www</a> for both <code>hvt</code> and <code>xen</code> targets.
+For the <code>master</code> branch, the <code>hvt</code> unikernel is deployed as the <code>www</code> <a href="https://github.com/hannesm/albatross">Albatross</a> service.</p>
+<p>See <a href="./VM-host.md">VM-host.md</a> for instructions about setting up a host for unikernels.</p>
+<p>There are 3 different deployer pipelines defined in this project, each deploying
+a related set of services. Each is configured to deploy itself from its own
+branch, serves a web UI from its own URL, and is registered with its own GitHub
+Application. These relations are summarized in the following table:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Deployer</th>
+          <th>Branch</th>
+          <th>URL</th>
+          <th>GitHub App</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Tarides</code></td>
+          <td><code>live-ci3</code></td>
+          <td><a href="https://deploy.ci.dev">https://deploy.ci.dev</a></td>
+          <td><a href="https://github.com/apps/deploy-ci-dev">https://github.com/apps/deploy-ci-dev</a></td>
+      </tr>
+      <tr>
+          <td><code>Ocaml_org</code></td>
+          <td><code>live-ocaml-org</code></td>
+          <td><a href="https://deploy.ci.ocaml.org">https://deploy.ci.ocaml.org</a></td>
+          <td><a href="https://github.com/apps/deploy-ci-ocaml-org">https://github.com/apps/deploy-ci-ocaml-org</a></td>
+      </tr>
+      <tr>
+          <td><code>Mirage</code></td>
+          <td><code>live-mirage</code></td>
+          <td><a href="https://deploy.mirageos.org">https://deploy.mirageos.org</a></td>
+          <td><a href="https://github.com/apps/deploy-mirage-io">https://github.com/apps/deploy-mirage-io</a></td>
+      </tr>
+  </tbody>
+</table>
+<p>The deployer&rsquo;s respective GitHub application is responsible for sending the
+deployer notifications about updates to the repositories being monitored. If the
+GitHub application is not updated to correspond to the repositories configured
+for a deployer, it will receive no updates, and consequently nothing will be
+deployed. See <a href="#updating-a-deployer-configuration">Updating a deployer configuration</a>.</p>
+<h2 id="testing-locally">Testing locally</h2>
+<p>To test changes to the pipeline, use:</p>
+<pre tabindex="0"><code>dune exec -- ocurrent-deployer-local --confirm=harmless --submission-service submission.cap \
+                                     --github-webhook-secret-file github-secret-file \
+                                     --flavour tarides -v \
+                                     ocurrent/ocaml-ci
+</code></pre><p>You will need a <code>submission.cap</code> to access an <a href="https://github.com/ocurrent/ocluster">OCluster build cluster</a>
+(you can run one locally fairly easily if needed), along with a <code>github-secret-file</code> containing a valid GitHub
+secret for <a href="https://docs.github.com/en/developers/webhooks-and-events/webhooks/securing-your-webhooks">securing webhooks</a>.</p>
+<p>Replace <code>ocurrent/ocaml-ci</code> with the GitHub repository you want to check, or omit it to check all of them.</p>
+<p>Unlike the full pipeline, this:</p>
+<ul>
+<li>Only tries to build the deployment branches (not all PRs).</li>
+<li>Doesn&rsquo;t post the result to Slack.</li>
+<li>Uses anonymous access to get the branch heads.</li>
+</ul>
+<p>You can supply <code>--github-app-id</code> and related options if you want to access GitHub via an app
+(this gives a higher rate limit for queries, allows setting the result status and handling GitHub webhooks).</p>
+<h2 id="updating-a-deployer-configuration">Updating a deployer configuration</h2>
+<p>Each deployer is configured with a list of the repositories it monitors.
+Whenever a repository is added to or removed from a deployer&rsquo;s configuration,
+the respective GitHub App must also be updated. Once a configuration change has
+been made and deployed (see <a href="#updating-services">Updating services</a>), update the
+GitHub App as follows:</p>
+<ul>
+<li>
+<p>Navigate to
+<a href="https://github.com/organizations/ocurrent/settings/installations">https://github.com/organizations/ocurrent/settings/installations</a>.</p>
+</li>
+<li>
+<p>Click &ldquo;Configure&rdquo; for the deployer&rsquo;s corresponding app.</p>
+</li>
+<li>
+<p>Under the &ldquo;Repository access&rdquo; panel, add or remove the relevant repository.</p>
+<p><img alt="A picture of the GitHub Apps Repository access panel"
+src="./github-app-config.png" width="450"></p>
+</li>
+<li>
+<p>The deployer runs deployability checks for repos it is monitoring and reports
+the results as CI statuses on PRs. We recommend configuring branch protections
+to make merges into development and production branches conditional on
+successful deployability checks. After a configuration change, ensure that the
+branch protection rules are up to date, and tracking the correct deployer.</p>
+</li>
+</ul>
+<h2 id="suggested-workflows">Suggested workflows</h2>
+<h3 id="updating-services">Updating services</h3>
+<p>To update a deployment that is managed by ocurrent-deployer (which could be ocurrent-deployer itself):</p>
+<ol>
+<li>Make a PR on that project&rsquo;s repository targeting its master branch as usual.</li>
+<li>Once it has passed CI/review, a project admin will <code>git push origin HEAD:live</code> to deploy it (replacing <code>live</code> with the configured deployment
+branch, as needed).</li>
+<li>If it works, the PR can be merged to master.</li>
+</ol>
+<h3 id="add-a-new-service">Add a new service</h3>
+<ol>
+<li>Deploy the service(s) manually using <code>docker stack deploy</code> first.</li>
+<li>Once that&rsquo;s working, make a PR against the ocurrent-deployer repository adding a rule to keep the services up-to-date.
+For the PR:
+<ul>
+<li>Drop the <code>id_rsa.pub</code> key in the <code>~/.ssh/authorized_keys</code> file on the machine where you want the deployer to deploy the container.</li>
+<li>Add the machine where you want to have the deployments to the <code>context/meta</code> folder. eg to add <code>awesome.ocaml.org</code>
+<pre tabindex="0"><code>docker --config config/docker context create \
+  --docker host=ssh://awesome.ocaml.org \
+  --description=&#34;awesome.ocaml.org&#34; \
+  awesome-ocaml-org
+</code></pre></li>
+<li>The hash for the folder inside <code>context/meta</code> is generated with <code>docker context create &lt;machine_name&gt;</code>.</li>
+<li>Add to <code>known_hosts</code> with ssh-keyscan of the host where you are deploying the service. eg
+<pre tabindex="0"><code>ssh-keyscan -H awesome.ocaml.org &gt;&gt; config/ssh/known_hosts
+</code></pre></li>
+</ul>
+</li>
+</ol>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

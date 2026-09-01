@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Readme</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocaml-multicore-ci/readme/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Readme">
+  <meta property="og:description" content="What is and how to run ocaml-multicore-ci.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Readme</h1>
+
+
+<h1 id="ocaml-multicore-ci">OCaml-Multicore-CI</h1>
+<p><a href="https://ci.ocamllabs.io/github/ocurrent/ocaml-multicore-ci"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fci.ocamllabs.io%2Fbadge%2Focurrent%2Focaml-multicore-ci%2Fmaster&amp;logo=ocaml" alt="OCaml-Multicore-CI Build Status"></a></p>
+<p>This is an <a href="https://github.com/ocurrent/ocurrent">OCurrent</a> pipeline that provides CI for OCaml projects hosted on GitHub,
+using multicore variants of the OCaml compiler.</p>
+<p>This is currently a fork of <a href="https://github.com/ocurrent/ocaml-ci">ocaml-ci</a>.  We expect to merge features into
+ocaml-ci or OCurrent over time, so that this repo becomes thinner.  Refer to
+ocaml-ci and OCurrent documentation for general architecture and design
+decisions.</p>
+<p>The pipeline is defined in <a href="https://github.com/ocurrent/ocaml-multicore-ci/blob/master/service/pipeline.ml">pipeline.ml</a>. It:</p>
+<ol>
+<li>Gets the list of installations of its GitHub app.</li>
+<li>For each installation, gets the list of repositories to check.</li>
+<li>For each repository, gets the branches and PRs to check.</li>
+<li>For each target, it fetches the head commit, generates a Dockerfile and builds it.</li>
+</ol>
+<p>The generated Dockerfile first adds all the <code>*.opam</code> files found in the project,
+then uses <code>opam</code> to install all the dependencies, then adds the rest of the source
+files. This means that rebuilds are often very fast, because Docker will reuse the
+previously cached build step as long as the opam files don&rsquo;t change.</p>
+<p>To add the CI to your own project:</p>
+<ol>
+<li>Go to <a href="https://github.com/apps/multicore-ci">https://github.com/apps/multicore-ci</a> and install the app for your GitHub user.</li>
+<li>Configure just the repositories you want to test (start with one!).</li>
+<li>Ask us to add you to the alpha-testers list by submitting a PR against this
+repository adding yourself to <code>--github-account-allowlist</code> in <code>stack.yml</code>.</li>
+<li>Report bugs :-)</li>
+</ol>
+<h2 id="installation">Installation</h2>
+<p>Get the code with:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">git clone --recursive https://github.com/ocurrent/ocaml-multicore-ci.git
+</span></span></code></pre></div><p>Note: you need to clone with <code>--recursive</code> because this project uses submodules
+(it depends on some packages that aren&rsquo;t released yet).
+If you forget, <code>git submodule update --init</code> will fetch them.</p>
+<p>To test the CI on a local Git clone, you need to first install the
+dependencies, and then use <code>dune exec</code> as shown below:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">opam update
+</span></span><span class="line"><span class="cl">opam install . --deps-only --yes --with-test
+</span></span><span class="line"><span class="cl">dune <span class="nb">exec</span> -- ocaml-multicore-ci-local /path/to/project
+</span></span></code></pre></div><p>This will build the project as the real CI would,
+but it only monitors the default branch and does not push the results anywhere.
+It runs a web interface at <a href="http://localhost:8080">http://localhost:8080</a>.
+This is useful if you want to try out changes to the pipeline.</p>
+<p>If you want to build the whole system, the easiest way is using Docker:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">docker build -t ocaml-multicore-ci-service .
+</span></span><span class="line"><span class="cl">docker build -f Dockerfile.web -t ocaml-multicore-ci-web .
+</span></span></code></pre></div><p>You&rsquo;ll have to register your own GitHub app to be able to test the services locally.</p>
+<p>If you want it to update to changes in opam-repository automatically you&rsquo;ll also need
+to register a webhook there sending push events to the CI&rsquo;s <code>/webhooks/github</code> path.</p>
+<h2 id="remote-api">Remote API</h2>
+<p>The service provides a <a href="https://github.com/ocurrent/ocaml-multicore-ci/blob/master/api/schema.capnp">Cap&rsquo;n Proto endpoint</a> and a command-line client that uses it.
+You will need to be given the <code>ocaml-ci.cap</code> file, which grants access to the API.
+The client can be built and run using <code>dune exec -- ocaml-multicore-ci --ci-cap=ocaml-ci.cap ...</code>, or
+installed as <code>ocaml-multicore-ci</code>.</p>
+<p>To see the branches and PRs that ocaml-multicore-ci is monitoring in a repository:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ ocaml-multicore-ci mirage/irmin
+</span></span><span class="line"><span class="cl">615364620f4233cb82a96144824eb6ad5d1104f0 refs/heads/1.4
+</span></span><span class="line"><span class="cl">e0fcf0d336544650ca5237b356cfce4a48378245 refs/heads/master
+</span></span><span class="line"><span class="cl">6c46d1de5e67a3f504fc55af1d644d852c946533 refs/heads/mirage-dev
+</span></span><span class="line"><span class="cl">28421a152e8e19b3fb5048670629e7e01d0fbea6 refs/pull/523/head
+</span></span><span class="line"><span class="cl">acfbee7e82fcaaa5a0dad900068dc67f22021f2e refs/pull/678/head
+</span></span><span class="line"><span class="cl">3fc04e9f6e7574c0f61eacb3187b412b3bababe4 refs/pull/728/head
+</span></span><span class="line"><span class="cl">32f6c9f303616880994998881ee75c8d1fe0df91 refs/pull/771/head
+</span></span><span class="line"><span class="cl">b2d4b06f94d13384ae08eb06439ce9c6066419cd refs/pull/815/head
+</span></span><span class="line"><span class="cl">d8161e6cbf06c3005a080d4df209f7de67d6fa5c refs/pull/851/head
+</span></span><span class="line"><span class="cl">5e36237d7ce6279878578cf48d8b63937c499e5a refs/pull/858/head
+</span></span><span class="line"><span class="cl">04a368ecd52ea436bfcd252ed94772f55b5159d5 refs/pull/866/head
+</span></span><span class="line"><span class="cl">2e838b491a4c0b21750f7a2e6dee88eee1c7d94e refs/pull/867/head
+</span></span></code></pre></div><p>You can pass either the reference (e.g. <code>refs/heads/master</code>) or the commit hash to choose one of them.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ ocaml-multicore-ci mirage/irmin refs/heads/master
+</span></span><span class="line"><span class="cl">alpine-3.10-ocaml-4.08
+</span></span></code></pre></div><p>To view the log (following it if incomplete):</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ ocaml-multicore-ci mirage/irmin refs/heads/master alpine-3.10-ocaml-4.08 log
+</span></span><span class="line"><span class="cl"><span class="o">[</span>...<span class="o">]</span>
+</span></span><span class="line"><span class="cl">- Test Successful in 17.643s. <span class="m">99</span> tests run.
+</span></span><span class="line"><span class="cl">-&gt; compiled  irmin-unix.dev
+</span></span><span class="line"><span class="cl">-&gt; installed irmin-unix.dev
+</span></span><span class="line"><span class="cl">Done.
+</span></span><span class="line"><span class="cl"><span class="c1"># Run eval $(opam env) to update the current shell environment</span>
+</span></span><span class="line"><span class="cl">Removing intermediate container 4c85cdc76ddc
+</span></span><span class="line"><span class="cl"> ---&gt; c8e34c3b5eee
+</span></span><span class="line"><span class="cl">Successfully built c8e34c3b5eee
+</span></span><span class="line"><span class="cl">2019-09-25 14:55.57: Job succeeded
+</span></span></code></pre></div><p>Instead of <code>log</code>, you can also use <code>cancel</code>, <code>rebuild</code> or <code>status</code>.</p>
+<p>For convenience, you can omit the leading <code>refs/</code> when specifying a reference,
+and for PRs you can omit the trailing <code>/head</code>. For commits, you must give at
+least the first 6 characters. e.g.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ ocaml-multicore-ci mirage/irmin pull/867 alpine-3.10-ocaml-4.08 cancel
+</span></span></code></pre></div>
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

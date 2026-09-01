@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>OCurrent</title>
+    <link>https://www.ocurrent.org/docs/ocurrent/</link>
+    <description>Recent content on OCurrent</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://www.ocurrent.org/docs/ocurrent/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Example pipelines</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/example_pipelines/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/example_pipelines/</guid>
+      <description>Some example pipelines in OCurrent</description>
+    </item>
+    <item>
+      <title>Internal overview</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/internals/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/internals/</guid>
+      <description>How OCurrent work under the hood</description>
+    </item>
+    <item>
+      <title>The build cache</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/disk_cache/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/disk_cache/</guid>
+      <description>How the build cache is stored</description>
+    </item>
+    <item>
+      <title>Write your own plugin</title>
+      <link>https://www.ocurrent.org/docs/ocurrent/writing_plugins/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocurrent/writing_plugins/</guid>
+      <description>How to write your own plugin in OCurrent</description>
+    </item>
+  </channel>
+</rss>

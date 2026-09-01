@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Write your own plugin</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent/writing_plugins/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Write your own plugin">
+  <meta property="og:description" content="How to write your own plugin in OCurrent">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Write your own plugin</h1>
+
+
+<h3 id="writing-plugins">Writing plugins</h3>
+<p>To create your own primitive operations (such as <code>Docker.build</code>), you&rsquo;ll probably want to use the
+<a href="https://ocurrent.github.io/ocurrent/current/Current_cache/index.html">Current_cache</a> library.
+This handles all the details of starting builds, recording the results, managing log files, etc.</p>
+<p>A minimal example looks something like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;lwt,current,current.cache&#34;</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nn">Lwt</span><span class="p">.</span><span class="nc">Infix</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nn">Current</span><span class="p">.</span><span class="nc">Syntax</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">Frob</span> <span class="o">=</span> <span class="k">struct</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">t</span> <span class="o">=</span> <span class="nc">No_context</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Key</span> <span class="o">=</span> <span class="nn">Current</span><span class="p">.</span><span class="nc">String</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Value</span> <span class="o">=</span> <span class="nn">Current</span><span class="p">.</span><span class="nc">String</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">id</span> <span class="o">=</span> <span class="s2">&#34;frob&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">build</span> <span class="nc">No_context</span> <span class="n">job</span> <span class="o">_</span><span class="n">key</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">      <span class="c">(* Wait in a queue or wait for resources here if needed. *)</span>
+</span></span><span class="line"><span class="cl">      <span class="nn">Current</span><span class="p">.</span><span class="nn">Job</span><span class="p">.</span><span class="n">start</span> <span class="n">job</span> <span class="o">~</span><span class="n">level</span><span class="o">:</span><span class="nn">Current</span><span class="p">.</span><span class="nn">Level</span><span class="p">.</span><span class="nc">Harmless</span> <span class="o">&gt;&gt;=</span> <span class="k">fun</span> <span class="bp">()</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">      <span class="c">(* Do the work here. *)</span>
+</span></span><span class="line"><span class="cl">      <span class="nn">Lwt</span><span class="p">.</span><span class="n">return</span> <span class="o">@@</span> <span class="nc">Ok</span> <span class="s2">&#34;frobbed&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">pp</span> <span class="n">f</span> <span class="n">key</span> <span class="o">=</span> <span class="nn">Fmt</span><span class="p">.</span><span class="n">pf</span> <span class="n">f</span> <span class="s2">&#34;frob %a&#34;</span> <span class="nn">Key</span><span class="p">.</span><span class="n">pp</span> <span class="n">key</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">auto_cancel</span> <span class="o">=</span> <span class="bp">false</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">FC</span> <span class="o">=</span> <span class="nn">Current_cache</span><span class="p">.</span><span class="nc">Make</span><span class="o">(</span><span class="nc">Frob</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">frob</span> <span class="n">key</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Current</span><span class="p">.</span><span class="n">component</span> <span class="s2">&#34;Frob&#34;</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span><span class="o">&gt;</span> <span class="n">key</span> <span class="o">=</span> <span class="n">key</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">FC</span><span class="p">.</span><span class="n">get</span> <span class="nn">Frob</span><span class="p">.</span><span class="nc">No_context</span> <span class="n">key</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p>The <code>frob</code> function is the one exposed to users.
+These functions always start by getting the actual values
+from their <code>Current.t</code> arguments using <code>let&gt;</code> (and <code>and&gt;</code>, for additional arguments).
+The <code>Current.component</code> line provides the label for the dot diagrams.</p>
+<p>The <code>build</code> function does the real work.
+It should try to build the output value from the key and return it.
+If you start any operations that need to be cancelled, use <code>Job.on_cancel</code> to register a callback.
+<code>job</code> can be used for logging.</p>
+<p>If you need extra context that shouldn&rsquo;t be part of the key
+(e.g. ssh keys used to connect to a remote machine)
+then you can use the <code>t</code> type for that, replacing <code>No_context</code> with whatever you require.
+Note that asking for the same key with two different contexts will <em>not</em> perform two different builds.</p>
+<p>The <code>Key</code> module describes the type of the inputs.
+It needs to provide a <code>digest</code> function for turning keys into unique strings.
+For short strings, you can just use the string itself (this is what <code>Current.String</code> does).
+For longer data, you might want to generate a SHA hash.
+For complex data types, you might want to convert to JSON, etc.</p>
+<p>The <code>Value</code> module describes the outputs.
+You need to provide <code>marshal</code> and <code>unmarshal</code> functions for storing the results on disk.
+Note that for large values you can write the data elsewhere and just use its identifier as the value.
+For example, the value returned by <code>Docker.build</code> is just the image&rsquo;s tag.
+The image itself is stored by Docker.</p>
+<p><code>auto_cancel</code> says whether OCurrent should cancel the job automatically if the build is no longer
+needed. For example, if you&rsquo;re building a Git commit and then the user makes another commit, you can decide
+whether it would be better to continue with the old build (while also building the new commit), or abort it.</p>
+<p><code>level</code> gives a rough estimate of the cost or risk of the operation.
+You can use the <code>--confirm</code> option to decide which operations OCurrent will perform automatically.</p>
+<p>As well as caching build operations (which take a key and produce a value), you can also cache outputs
+(which take a key and a value as input). For example, the <code>Docker.tag</code> operation above uses the output cache.</p>
+<p>See the <a href="https://ocurrent.github.io/ocurrent/current/Current_cache/index.html">Current_cache</a> API for more information.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

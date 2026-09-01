@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>The build cache</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent/disk_cache/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="The build cache">
+  <meta property="og:description" content="How the build cache is stored">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>The build cache</h1>
+
+
+<h3 id="the-build-cache">The build cache</h3>
+<p>When run, OCurrent keeps its state in <code>./var</code> (creating it if it doesn&rsquo;t already exist).
+The layout is subject to change, but for debugging purposes:</p>
+<ul>
+<li><code>var/job/$date/$time-$name-$random.log</code> is used for build logs.</li>
+<li><code>var/db</code> contains an sqlite database recording completed builds and their results.</li>
+<li><code>var/git/$repo-$hash</code> is used by the Git plugin as a local Git clone for a remote repository.</li>
+</ul>
+<p>For debugging, you can query the build cache (even while OCurrent is running) like this:</p>
+<pre tabindex="0"><code>$ sqlite3 var/db/sqlite.db
+sqlite&gt; SELECT key, job_id, ok, value FROM cache WHERE op=&#39;docker-build&#39; ORDER BY finished;
+</code></pre><p>Here, <code>key</code> is the Git commit that was built, <code>log</code> is the relative path of the build log,
+<code>ok</code> indicates whether the build passed, and <code>value</code> is the resulting Docker image
+(or the error message, if <code>ok</code> is false).</p>
+<p>For the full schema, see <a href="https://github.com/ocurrent/ocurrent/blob/master/lib_cache/db.ml">lib_cache/db.ml</a>.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

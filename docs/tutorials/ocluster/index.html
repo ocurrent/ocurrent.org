@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>OCluster</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/tutorials/ocluster/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="OCluster">
+  <meta property="og:description" content="Capnp powered distributed CI builds.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+    <meta property="article:published_time" content="2021-01-22T00:00:00+00:00">
+    <meta property="article:modified_time" content="2021-01-22T00:00:00+00:00">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>OCluster</h1>
+
+
+<p>In this section (and the following <em>OBuilder</em> section) we&rsquo;ll look at two useful libraries that OCurrent provides to take your pipelines to the next level.</p>
+<p>The first, and topic of this section, is <a href="https://github.com/ocurrent/ocluster">OCluster</a>. OCluster manages builds on worker nodes, implement a scheduling service to accept new jobs and send them to workers based on some algorithm.</p>
+<p>The README of the OCluster repository is an excellent place to start; this documentation, however, will assume no prior knowledge except what was explained in the previous three sections.</p>
+<h1 id="part-1">Part 1</h1>
+<p>In this section we&rsquo;ll look at the infrastructure provided out-of-the-box by OCluster to build a distributed system using Capnp to tie all of the pieces together.</p>
+<p>At it&rsquo;s simplest, OCluster provides four main primitives to build a cluster:</p>
+<ul>
+<li>Scheduler: the scheduler handles accepting jobs, organising a fair queueing mechanism and dispatching jobs to pools and workers. When it starts up it also generates the <code>admin.cap</code> allowing someone to manage the cluster.</li>
+<li>Worker: a worker belongs to a pool (and will need access to the pool&rsquo;s <code>.cap</code> file, see the previous section) and will process jobs given to it.</li>
+<li>Admin: a service for managing lots of different aspects of the cluster.</li>
+<li>Client: clients can submit jobs to the scheduler, but the admin must first generate a <code>submission.cap</code> and add the client. When submitting jobs the client specifies which pool it wants along with other things like a cache hint. We&rsquo;ll look at these more closely soon.</li>
+</ul>
+<h2 id="a-typical-configuration">A Typical Configuration</h2>
+<a style="border-bottom: none" href="/img/ocluster.svg">
+  <img width="800" alt="OCluster configuration diagram" src="/img/ocluster.svg"/>
+</a>
+<p>Above you can see a depiction of a typical OCluster configuration. There&rsquo;s quite a lot to take in but the main sections are <em>clients</em>, <em>the scheduler</em>, <em>the admin</em> and <em>workers</em> organised into <em>pools</em>.</p>
+<h1 id="part-2">Part 2</h1>
+<p>Almost everything in the OCurrent world communicates using <a href="https://capnproto.org/">Cap&rsquo;n Proto</a>. The only reference to why it is called this was from <a href="https://news.ycombinator.com/item?id=12471266">this hackernews thread</a>.</p>
+<blockquote>
+<p>Or you can also think of it as &ldquo;Cap-and-Proto&rdquo;. Which is an intentional pun (&ldquo;capabilities and protocols&rdquo;, or something).</p>
+</blockquote>
+<p>From the introduction we get a &ldquo;jargon-rich&rdquo; description of what we&rsquo;re dealing with:</p>
+<blockquote>
+<p>Cap’n Proto is an insanely fast data interchange format and capability-based RPC system. Think JSON, except binary.</p>
+</blockquote>
+<p>So let&rsquo;s start with RPC.</p>
+<h2 id="remote-procedure-calls">Remote Procedure Calls</h2>
+<p>Typically when thinking of two communicating devices, we think of a request and response framework. You ask a webserver for a web-page and it responds. RPC wants the programmer (or whoever) to <em>invoke</em> the <em>procedure</em> on the other machine.</p>
+<p>The RPC system sits between the caller and the callee marshalling (encoding) and un-marshalling (decoding) arguments and return values. Some programming languages have their own internal RPC system (like Java&rsquo;s remote method invocation). More commonly there are protocol specifications (gRPC, Cap&rsquo;n Proto etc.) that act as a platform-agnostic scheme to perform RPC regardless of where you are running (OS or programming language).</p>
+<p>Martin Kleppmann does a great job <a href="https://www.youtube.com/watch?v=S2osKiqQG9s">explaining RPC systems</a> in a series of undergraduate lectures.</p>
+<h2 id="capn-proto-schema">Cap&rsquo;n Proto Schema</h2>
+<p>The Cap&rsquo;n Proto schema is used to describe the layout of data. Unlike JSON, the schema is strongly-typed and not self-describing. Strongly-typed refers to the inability to implicitly convert between unrelated types i.e. no <code>&quot;hello&quot; + 3</code>. Non self-describing means we need a schema to understand the structure.</p>
+<p><a href="https://capnproto.org/language.html">The schema section of Cap&rsquo;n Proto</a> does a perfect job of describing in great detail all of the different parts of its specification. Here&rsquo;s an example from a file called <code>schema.capnp</code>:</p>
+<!-- $MDX file=./example/schema.capnp -->
+<pre tabindex="0"><code>@0xd7de9e0850af18b2;
+# A unique identification string
+
+struct Config {
+  id @0 : Text = &#34;default_id&#34;; # field with default value
+  workers @1 : Int8;
+  port @2 : Int16; #max 65535 ports
+}
+</code></pre><p>The <code>@n</code> tags show you the protocol has evolved over time with each number field incrementing the count. Each field of the struct is also given a type from <a href="https://capnproto.org/language.html#built-in-types">the built-in</a> types. We won&rsquo;t look into everything that can be defined here, but instead move on to the OCaml mapping.</p>
+<p>For a real-world example, have a look at <a href="https://github.com/ocurrent/ocluster/blob/master/api/schema.capnp">OCluster&rsquo;s API schema</a>.</p>
+<h3 id="capn-proto-in-ocaml">Cap&rsquo;n Proto in OCaml</h3>
+<p>Thanks to <a href="https://github.com/capnproto/capnp-ocaml">@pelzlpj</a> there are OCaml &ldquo;bindings&rdquo; to manipulate Cap&rsquo;n Proto messages in OCaml. From a schema, the relevant source can be generated using <code>capnp compiler -o ocaml</code>. As will be described later, this build command is implemented as a custom rule in the dune file.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">$</span> <span class="n">cat</span> <span class="n">example</span><span class="o">/</span><span class="n">schema</span><span class="o">.</span><span class="n">mli</span>
+</span></span><span class="line"><span class="cl"><span class="o">[@@@</span><span class="n">ocaml</span><span class="o">.</span><span class="n">warning</span> <span class="s2">&#34;-27-32-37-60&#34;</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">type</span> <span class="n">ro</span> <span class="o">=</span> <span class="nn">Capnp</span><span class="p">.</span><span class="nn">Message</span><span class="p">.</span><span class="n">ro</span>
+</span></span><span class="line"><span class="cl"><span class="k">type</span> <span class="n">rw</span> <span class="o">=</span> <span class="nn">Capnp</span><span class="p">.</span><span class="nn">Message</span><span class="p">.</span><span class="n">rw</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="k">type</span> <span class="nc">S</span> <span class="o">=</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">  <span class="k">module</span> <span class="nc">MessageWrapper</span> <span class="o">:</span> <span class="nn">Capnp</span><span class="p">.</span><span class="nn">RPC</span><span class="p">.</span><span class="nc">S</span>
+</span></span><span class="line"><span class="cl">  <span class="k">type</span> <span class="k">&#39;</span><span class="n">cap</span> <span class="n">message_t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">cap</span> <span class="nn">MessageWrapper</span><span class="p">.</span><span class="nn">Message</span><span class="p">.</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">  <span class="k">type</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">reader_t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">MessageWrapper</span><span class="p">.</span><span class="nn">StructStorage</span><span class="p">.</span><span class="n">reader_t</span>
+</span></span><span class="line"><span class="cl">  <span class="k">type</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">builder_t</span> <span class="o">=</span> <span class="k">&#39;</span><span class="n">a</span> <span class="nn">MessageWrapper</span><span class="p">.</span><span class="nn">StructStorage</span><span class="p">.</span><span class="n">builder_t</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">module</span> <span class="nc">Reader</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">array_t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">builder_array_t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">pointer_t</span> <span class="o">=</span> <span class="n">ro</span> <span class="nn">MessageWrapper</span><span class="p">.</span><span class="nn">Slice</span><span class="p">.</span><span class="n">t</span> <span class="n">option</span>
+</span></span><span class="line"><span class="cl">    <span class="k">val</span> <span class="n">of_pointer</span> <span class="o">:</span> <span class="n">pointer_t</span> <span class="o">-&gt;</span> <span class="k">&#39;</span><span class="n">a</span> <span class="n">reader_t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Config</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">      <span class="k">type</span> <span class="n">struct_t</span> <span class="o">=</span> <span class="o">[`</span><span class="nc">Config_ac6bb9103d76a422</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl">      <span class="k">type</span> <span class="n">t</span> <span class="o">=</span> <span class="n">struct_t</span> <span class="n">reader_t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">has_id</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">bool</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">id_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">workers_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">port_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">of_message</span> <span class="o">:</span> <span class="k">&#39;</span><span class="n">cap</span> <span class="n">message_t</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">of_builder</span> <span class="o">:</span> <span class="n">struct_t</span> <span class="n">builder_t</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">end</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">module</span> <span class="nc">Builder</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">array_t</span> <span class="o">=</span> <span class="nn">Reader</span><span class="p">.</span><span class="n">builder_array_t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">reader_array_t</span> <span class="o">=</span> <span class="nn">Reader</span><span class="p">.</span><span class="n">array_t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">type</span> <span class="n">pointer_t</span> <span class="o">=</span> <span class="n">rw</span> <span class="nn">MessageWrapper</span><span class="p">.</span><span class="nn">Slice</span><span class="p">.</span><span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">module</span> <span class="nc">Config</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">      <span class="k">type</span> <span class="n">struct_t</span> <span class="o">=</span> <span class="o">[`</span><span class="nc">Config_ac6bb9103d76a422</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl">      <span class="k">type</span> <span class="n">t</span> <span class="o">=</span> <span class="n">struct_t</span> <span class="n">builder_t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">has_id</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">bool</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">id_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">id_set</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">string</span> <span class="o">-&gt;</span> <span class="kt">unit</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">workers_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">workers_set_exn</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="o">-&gt;</span> <span class="kt">unit</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">port_get</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">port_set_exn</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="kt">int</span> <span class="o">-&gt;</span> <span class="kt">unit</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">of_message</span> <span class="o">:</span> <span class="n">rw</span> <span class="n">message_t</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">to_message</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="n">rw</span> <span class="n">message_t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">to_reader</span> <span class="o">:</span> <span class="n">t</span> <span class="o">-&gt;</span> <span class="n">struct_t</span> <span class="n">reader_t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">init_root</span> <span class="o">:</span> <span class="o">?</span><span class="n">message_size</span><span class="o">:</span><span class="kt">int</span> <span class="o">-&gt;</span> <span class="kt">unit</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">      <span class="k">val</span> <span class="n">init_pointer</span> <span class="o">:</span> <span class="n">pointer_t</span> <span class="o">-&gt;</span> <span class="n">t</span>
+</span></span><span class="line"><span class="cl">    <span class="k">end</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span><span class="line"><span class="cl"><span class="k">end</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">MakeRPC</span><span class="o">(</span><span class="nc">MessageWrapper</span> <span class="o">:</span> <span class="nn">Capnp</span><span class="p">.</span><span class="nn">RPC</span><span class="p">.</span><span class="nc">S</span><span class="o">)</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">  <span class="k">include</span> <span class="nc">S</span> <span class="k">with</span> <span class="k">module</span> <span class="nc">MessageWrapper</span> <span class="o">=</span> <span class="nc">MessageWrapper</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">module</span> <span class="nc">Client</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">module</span> <span class="nc">Service</span> <span class="o">:</span> <span class="k">sig</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span>
+</span></span><span class="line"><span class="cl"><span class="k">end</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">Make</span><span class="o">(</span><span class="nc">M</span> <span class="o">:</span> <span class="nn">Capnp</span><span class="p">.</span><span class="nn">MessageSig</span><span class="p">.</span><span class="nc">S</span><span class="o">)</span> <span class="o">:</span> <span class="k">module</span> <span class="k">type</span> <span class="k">of</span> <span class="nc">MakeRPC</span><span class="o">(</span><span class="nn">Capnp</span><span class="p">.</span><span class="nn">RPC</span><span class="p">.</span><span class="nc">None</span><span class="o">(</span><span class="nc">M</span><span class="o">))</span>
+</span></span></code></pre></div><p>Let&rsquo;s deconstruct that a bit. Our schema is defined within the main <code>S</code> module. Using the <code>MessageWrapper</code> module, the:</p>
+<blockquote>
+<p>generated code is functorized over the underlying message format</p>
+</blockquote>
+<p>which is made clear by the <code>MakeRPC</code> functor and the use of that module in <code>S</code>. There are two main modules that <code>S</code> exposes as structs are mapped to modules:</p>
+<ol>
+<li><code>Reader</code> &ndash; provides read-only operations over the struct</li>
+<li><code>Builder</code> &ndash; provides read-write operations over the struct</li>
+</ol>
+<p>To access our schema in OCaml code, it is conventional to generate it at build-time using dune.</p>
+<!-- $MDX file=example/dune -->
+<pre tabindex="0"><code>(executable
+ (name main)
+ (flags
+  (:standard -w -53-55))
+ (libraries capnp-rpc-lwt))
+
+(rule
+ (targets schema.ml schema.mli)
+ (deps schema.capnp)
+ (action
+  (run capnp compile -o %{bin:capnpc-ocaml} %{deps})))
+</code></pre><p>Here we have a very simple custom rule to generate the <code>schema.ml{i}</code> files from the <code>.capnp</code> file using the compiler. Note as well the need for the warning flags to be disabled. This is because <code>capnp-ocaml</code> tries to do inlining that only works on a <code>+flambda</code> branch of the compiler.</p>
+<!-- $MDX file=example/main.ml,part=0 -->
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="k">module</span> <span class="nc">Schema</span> <span class="o">=</span> <span class="nn">Schema</span><span class="p">.</span><span class="nc">Make</span> <span class="o">(</span><span class="nn">Capnp</span><span class="p">.</span><span class="nc">BytesMessage</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">let</span> <span class="bp">()</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">s</span> <span class="o">=</span> <span class="nn">Schema</span><span class="p">.</span><span class="nn">Builder</span><span class="p">.</span><span class="nn">Config</span><span class="p">.</span><span class="n">init_root</span> <span class="bp">()</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="n">print_endline</span> <span class="o">(</span><span class="nn">Schema</span><span class="p">.</span><span class="nn">Builder</span><span class="p">.</span><span class="nn">Config</span><span class="p">.</span><span class="n">id_get</span> <span class="n">s</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Schema</span><span class="p">.</span><span class="nn">Builder</span><span class="p">.</span><span class="nn">Config</span><span class="p">.</span><span class="n">id_set</span> <span class="n">s</span> <span class="s2">&#34;new_id&#34;</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">print_endline</span> <span class="o">(</span><span class="nn">Schema</span><span class="p">.</span><span class="nn">Builder</span><span class="p">.</span><span class="nn">Config</span><span class="p">.</span><span class="n">id_get</span> <span class="n">s</span><span class="o">)</span>
+</span></span></code></pre></div><p>This small example uses the generated <code>schema.ml</code> module to produce the <code>default_id</code> we specified from our capnp file. But we can also set the <code>id</code> just as easily and print the new one.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ example/main.exe
+</span></span><span class="line"><span class="cl">default_id
+</span></span><span class="line"><span class="cl">new_id
+</span></span></code></pre></div><h2 id="capnp-rpc">Capnp RPC</h2>
+<h3 id="time-travelling-with-promises">Time-travelling with Promises</h3>
+<p>Now that we&rsquo;ve covered the basics of Capnp schema generation we can move on to the <a href="https://capnproto.org/rpc.html">RPC protocol</a>. One of the big selling-points is that Capnp-RPC is a <em>time-travelling RPC</em> (or promise-pipelining). If you are familiar with OCaml&rsquo;s Lwt library (or promises in Javascript) you should be familiar with the idea of promises.</p>
+<p>As a recap, promises are potentially pending results of computation. The neat thing about them is that you can carry on your computation (building up a series of callbacks) even without the actual data. In this way you can achieve a form of concurrency. Capnp-RPC provides a similar idea when results and arguments of RPC calls stay contained within the same client-server connection.</p>
+<p>In addition to this, Capnp-RPC uses <em>promise pipelining</em>. In essence we can call further methods of unresolved promises in a <a href="http://www.erights.org/elib/distrib/pipeline.html">pipeline</a> fashion without incurring the cost of extra round-trip times.</p>
+<h3 id="capabilities">Capabilities</h3>
+<p>Most people are familiar with the idea of capabilities from access control matrices (or similar). Here, the idea is quite simple. Our system is made up of a set of subjects <code>S</code>, a set of objects <code>O</code> and a set of access rights <code>A</code>. A capability associates a subset of access rights to a particular object <code>o</code> with a subject <code>s</code>. <a href="http://en.wikipedia.org/wiki/Capability-based_security">Vitally</a>:</p>
+<blockquote>
+<p>&hellip; a capability-based &hellip; system must use a capability to access an object</p>
+</blockquote>
+<p>The interface described previously is in fact a capability &ndash; it is both linked to some object and grants access to that object by nature of being able to call it.</p>
+<h3 id="capnp-rpc-in-ocluster">Capnp-RPC in OCluster</h3>
+<p>We&rsquo;ll touch on this some more in later sections, but the main idea is that OCluster needs a method to communicate between machines (for example the scheduler and the workers). <a href="https://hpbn.co/transport-layer-security-tls/">Ilya Grigorik&rsquo;s High Performance Browser Networking book</a> has a brilliant chapter on TLS. Communication happens over <em>Transport Layer Security</em> (TLS) but within the <code>.cap</code> files there are fingerprints and a secret.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Internal overview</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocurrent/internals/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Internal overview">
+  <meta property="og:description" content="How OCurrent work under the hood">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Internal overview</h1>
+
+
+<h1 id="internals">Internals</h1>
+<p>To use OCurrent effectively, it can be useful to understand how it works internally.
+This page describes how OCurrent is implemented.
+There are three main features provided by a <code>Current.t</code> value:</p>
+<ul>
+<li>Automatic re-evaluation when inputs change.</li>
+<li>Handling of errors and pending states.</li>
+<li>Static analysis and diagram generation.</li>
+</ul>
+<p>Let&rsquo;s look at these individually&hellip;</p>
+<h2 id="incremental-evaluation">Incremental evaluation</h2>
+<p>The automatic updating is built on the <code>current_incr</code> library (in <code>lib_incr</code> in the source).
+This library is very small and has no dependencies, and can be useful even outside of OCurrent.</p>
+<p>Let&rsquo;s try it out. You can get an interactive environment with:</p>
+<pre tabindex="0"><code>opam depext -i current utop
+utop
+</code></pre><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;current&#34;</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nc">Current_incr</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">x</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="n">3</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">y</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">map</span> <span class="o">(</span><span class="k">fun</span> <span class="n">x</span> <span class="o">-&gt;</span> <span class="n">x</span> <span class="o">*</span> <span class="n">2</span><span class="o">)</span> <span class="o">(</span><span class="nn">Current_incr</span><span class="p">.</span><span class="n">of_var</span> <span class="n">x</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">map</span> <span class="o">(</span><span class="nn">Printf</span><span class="p">.</span><span class="n">printf</span> <span class="s2">&#34;y is now %d</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">)</span> <span class="n">y</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span> <span class="n">is</span> <span class="n">now</span> <span class="n">6</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p>This is the incremental equivalent of:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">x&#39;</span> <span class="o">=</span> <span class="n">3</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">y&#39;</span> <span class="o">=</span> <span class="n">x&#39;</span> <span class="o">*</span> <span class="n">2</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Printf</span><span class="p">.</span><span class="n">printf</span> <span class="s2">&#34;y&#39; is now %d</span><span class="se">\n</span><span class="s2">&#34;</span> <span class="n">y&#39;</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="n">y&#39;</span> <span class="n">is</span> <span class="n">now</span> <span class="n">6</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p>However, we can change <code>x</code> and recompute everything that depends on it:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">change</span> <span class="n">x</span> <span class="n">21</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">propagate</span> <span class="bp">()</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span> <span class="n">is</span> <span class="n">now</span> <span class="n">42</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p>If you run <code>propagate</code> again, it will not display <code>y is now 42</code> again, as the value hasn&rsquo;t changed.</p>
+<p>For more information about this library, see the <a href="https://ocurrent.github.io/ocurrent/current_incr/Current_incr/index.html">Current_incr API docs</a>.</p>
+<h2 id="errors-and-pending-results">Errors and pending results</h2>
+<p>The <code>lib_term</code> library depends on and wraps <code>current_incr</code>.
+It adds static analysis (which we&rsquo;ll look at in the next section) and error handling.
+Normally it is wrapped in turn by the main OCurrent library, but we can use it directly like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="o">#</span><span class="n">require</span> <span class="s2">&#34;current.term&#34;</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">Term</span> <span class="o">=</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nc">Make</span><span class="o">(</span><span class="nc">Unit</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p>The functor argument just provides a type for job metadata, which we don&rsquo;t care about for this example.
+Here are some examples showing how errors are handled:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">test</span> <span class="n">x</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">         <span class="n">x</span>
+</span></span><span class="line"><span class="cl">   <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">map</span> <span class="o">(</span><span class="k">fun</span> <span class="n">x</span> <span class="o">-&gt;</span> <span class="n">x</span> <span class="o">*</span> <span class="n">2</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">   <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span>
+</span></span><span class="line"><span class="cl">   <span class="o">|&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="n">test</span> <span class="o">(</span><span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="n">21</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Ok</span> <span class="n">42</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="n">test</span> <span class="o">(</span><span class="nn">Term</span><span class="p">.</span><span class="n">fail</span> <span class="s2">&#34;Crashed&#34;</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Error</span> <span class="o">(`</span><span class="nc">Msg</span> <span class="s2">&#34;Crashed&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="n">test</span> <span class="o">(</span><span class="nn">Term</span><span class="p">.</span><span class="n">active</span> <span class="o">`</span><span class="nc">Running</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">int</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Error</span> <span class="o">(`</span><span class="nc">Active</span> <span class="o">`</span><span class="nc">Running</span><span class="o">)</span>
+</span></span></code></pre></div><p>This is a pretty standard result monad, except that we have an extra &ldquo;error&rdquo;
+type to represent a calculation that couldn&rsquo;t produce a result yet, but will in
+future.</p>
+<p>You can use <code>Term.catch</code> to turn a failed value back into a usable result:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Term</span><span class="p">.</span><span class="n">fail</span> <span class="s2">&#34;Crashed&#34;</span>
+</span></span><span class="line"><span class="cl">       <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">catch</span>
+</span></span><span class="line"><span class="cl">       <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="n">map</span> <span class="o">(</span><span class="k">function</span>
+</span></span><span class="line"><span class="cl">          <span class="o">|</span> <span class="nc">Ok</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="s2">&#34;good&#34;</span>
+</span></span><span class="line"><span class="cl">          <span class="o">|</span> <span class="nc">Error</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="s2">&#34;bad&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">       <span class="o">|&gt;</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span>
+</span></span><span class="line"><span class="cl">       <span class="o">|&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">string</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Ok</span> <span class="s2">&#34;bad&#34;</span>
+</span></span></code></pre></div><p>This pipeline catches the error at the start and successfully returns &ldquo;bad&rdquo;.</p>
+<p><code>Term.state</code> is similar, but also gives access to active values.
+For example, when testing a PR on GitHub your pipeline may want to handle the &ldquo;active&rdquo; state to set the GitHub commit status to &ldquo;pending&rdquo;.</p>
+<p>To make any real use of <code>Term</code>, you&rsquo;ll need to provide some &ldquo;primitive&rdquo; operations that do something interesting.
+For example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">module</span> <span class="nc">Term</span> <span class="o">=</span> <span class="nn">Current_term</span><span class="p">.</span><span class="nc">Make</span><span class="o">(</span><span class="nc">Unit</span><span class="o">);;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">open</span> <span class="nn">Term</span><span class="p">.</span><span class="nc">Syntax</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">approved</span> <span class="o">=</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">var</span> <span class="bp">false</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">await_approval</span> <span class="n">x</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Term</span><span class="p">.</span><span class="n">component</span> <span class="s2">&#34;approve&#34;</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span><span class="o">&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Current_incr</span><span class="p">.</span><span class="n">of_cc</span> <span class="k">begin</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Current_incr</span><span class="p">.</span><span class="n">read</span> <span class="o">(</span><span class="nn">Current_incr</span><span class="p">.</span><span class="n">of_var</span> <span class="n">approved</span><span class="o">)</span> <span class="o">@@</span> <span class="k">function</span>
+</span></span><span class="line"><span class="cl">    <span class="o">|</span> <span class="bp">true</span> <span class="o">-&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">write</span> <span class="o">(</span><span class="nc">Ok</span> <span class="n">x</span><span class="o">,</span> <span class="nc">None</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">    <span class="o">|</span> <span class="bp">false</span> <span class="o">-&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">write</span> <span class="o">(</span><span class="nc">Error</span> <span class="o">(`</span><span class="nc">Active</span> <span class="o">(`</span><span class="nc">Ready</span><span class="o">)),</span> <span class="nc">None</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">end</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span></code></pre></div><p><code>await_approval x</code> is a term that is pending until <code>approved</code> is <code>true</code>, then returns <code>x</code>.
+<code>Term.component</code> provides a label for the static analysis, <code>let&gt; x = x</code> gets the current value of term <code>x</code> (and records the static dependency on <code>x</code>), and the body is an incremental value with the result.
+You can use it like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="o">#</span> <span class="k">let</span> <span class="n">result</span> <span class="o">=</span> <span class="nn">Term</span><span class="p">.</span><span class="n">return</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="s2">&#34;build result&#34;</span> <span class="s2">&#34;image1&#34;</span> <span class="o">|&gt;</span> <span class="n">await_approval</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span> <span class="n">result</span> <span class="o">|&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">string</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Error</span> <span class="o">(`</span><span class="nc">Active</span> <span class="o">`</span><span class="nc">Ready</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">change</span> <span class="n">approved</span> <span class="bp">true</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">unit</span> <span class="o">=</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">propagate</span> <span class="bp">()</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">unit</span> <span class="o">=</span> <span class="bp">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">#</span> <span class="nn">Term</span><span class="p">.</span><span class="nn">Executor</span><span class="p">.</span><span class="n">run</span> <span class="n">result</span> <span class="o">|&gt;</span> <span class="nn">Current_incr</span><span class="p">.</span><span class="n">observe</span><span class="o">;;</span>
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="o">:</span> <span class="kt">string</span> <span class="nn">Current_term__</span><span class="p">.</span><span class="nn">Output</span><span class="p">.</span><span class="n">t</span> <span class="o">=</span> <span class="nc">Ok</span> <span class="s2">&#34;image1&#34;</span>
+</span></span></code></pre></div><h2 id="static-analysis">Static analysis</h2>
+<p>As well as an incremental result value, as described above, a <code>Term.t</code> also includes a &ldquo;static&rdquo; component. <code>Term.t</code> is defined like this:</p>
+<pre tabindex="0"><code>type &#39;a t = {
+  id : Id.t;
+  bind : bind_context;
+  ty : metadata_ty;
+  v : &#39;a Dyn.t Current_incr.t;
+}
+</code></pre><p><code>v</code> is the dynamic (incremental) part. The rest is &ldquo;static&rdquo; information about the shape of the pipeline, used to generate the diagrams. Note however that the &ldquo;static&rdquo; part can contain incremental components too in some cases. For example, a <code>bind</code> operation generates new bits of pipeline at runtime depending on its dynamic input.</p>
+<p>The combinators in <code>Term</code> build up new terms with the correct static and dynamic parts.
+For example, <code>lib_term/current_term.ml</code> defines the <code>Term.map</code> function like this:</p>
+<pre tabindex="0"><code>let map f x =
+  let id = Id.mint () in
+  node ~id (Map (Term x)) @@ Current_incr.map (Dyn.map ~id f) x.v
+</code></pre><ul>
+<li>The <code>Map (Term x)</code> is the static part, saying that the new node is a <code>Map</code> operation with input <code>x</code>.</li>
+<li>The <code>Current_incr.map (Dyn.map ~id f) x.v</code> is the dynamic part, saying that the value is the result
+of applying <code>f</code> to the dynamic value part of <code>x</code> (<code>x.v</code>).
+<code>Dyn.map</code> handles the <code>result</code> type (only affecting <code>Ok</code> values)
+and the <code>Current_incr.map</code> handles the incremental part, so it will update automatically.</li>
+</ul>
+<p><code>map</code> operations aren&rsquo;t very interesting (they only appear on diagrams if they fail), but primitive operations
+and some other combinators are shown. We can render the <code>result</code> pipeline above like this:</p>
+<pre tabindex="0"><code>utop # Format.printf &#34;@[&lt;h&gt;%a@]@.&#34; Term.Analysis.pp result;;
+build result &gt;&gt;= approve
+</code></pre><p>You can also use <code>pp_dot</code> instead of <code>pp</code>, to generate a graphviz dot file.</p>
+<h2 id="ocurrent">OCurrent</h2>
+<p>The above sections describe the internal libraries that are used by the main OCurrent library (in <code>lib</code>).
+This extends <code>Current_term</code> with primitives that use <code>Lwt</code> to run jobs asynchronously, a database
+to persist results, support for collecting log files, etc.</p>
+<p>Instead of using our <code>Term</code> module above, you use <code>Current</code>, and instead of writing low-level primitives
+like <code>await_approval</code> directly, you can use the pre-built <code>Current.Monitor</code>, <code>Current.Var</code> and <code>Current_cache</code>.
+And instead of running <code>Term.Executor.run</code> manually, <code>Current.Engine.run</code> will run an <code>Lwt</code> thread that
+calls <code>propagate</code> in a loop, triggered by <code>Current.Engine.update</code>.</p>
+<p>Then, various other libraries provide extensions, such as a web interface, Cap&rsquo;n Proto RPC, GitHub support, etc.
+These are in their own packages to keep the number of dependencies of the core <code>current</code> package small.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

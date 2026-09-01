@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>OCaml CI on OCurrent</title>
+    <link>https://www.ocurrent.org/docs/ocaml-ci/</link>
+    <description>Recent content in OCaml CI on OCurrent</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="https://www.ocurrent.org/docs/ocaml-ci/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Deploy on Docker</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/docker-deployment/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/docker-deployment/</guid>
+      <description>How to deploy your own CI with Docker.</description>
+    </item>
+    <item>
+      <title>Development notes</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/dev/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/dev/</guid>
+      <description>How to setup a development environment for OCaml CI.</description>
+    </item>
+    <item>
+      <title>Readme</title>
+      <link>https://www.ocurrent.org/docs/ocaml-ci/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://www.ocurrent.org/docs/ocaml-ci/readme/</guid>
+      <description>What is OCaml CI and how to use it.</description>
+    </item>
+  </channel>
+</rss>

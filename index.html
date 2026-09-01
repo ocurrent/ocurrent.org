@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+    <head>
+	<meta name="generator" content="Hugo 0.139.0">
+    <title>Welcome to OCurrent</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Welcome to OCurrent">
+  <meta property="og:description" content="A Pipeline language for keeping things up-to-date">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="website">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<div id="topline">
+    <h1>Welcome to OCurrent</h1>
+    
+    <p class="summary">A Pipeline language for keeping things up-to-date</p>
+    
+</div>
+
+
+<p>OCurrent allows you to specify a workflow / pipeline for keeping things
+up-to-date.</p>
+<p><img src="/graph/pipeline.svg" alt="Example OCurrent pipeline"></p>
+<p>For example, the pipeline shown above fetches the head of a GitHub repository&rsquo;s
+<code>master</code> branch, builds it, runs the tests, and deploys the binary if the tests
+pass. When a new commit is pushed, it runs the pipeline again.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ocaml" data-lang="ocaml"><span class="line"><span class="cl"><span class="k">let</span> <span class="n">pipeline</span> <span class="o">~</span><span class="n">repo</span> <span class="bp">()</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">src</span> <span class="o">=</span> <span class="nn">Git</span><span class="p">.</span><span class="nn">Local</span><span class="p">.</span><span class="n">head_commit</span> <span class="n">repo</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">base</span> <span class="o">=</span> <span class="nn">Docker</span><span class="p">.</span><span class="n">pull</span> <span class="o">~</span><span class="n">schedule</span><span class="o">:</span><span class="n">weekly</span> <span class="s2">&#34;ocaml/opam2&#34;</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="k">let</span> <span class="n">build</span> <span class="n">ocaml_version</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">    <span class="k">let</span> <span class="n">dockerfile</span> <span class="o">=</span>
+</span></span><span class="line"><span class="cl">      <span class="k">let</span><span class="o">+</span> <span class="n">base</span> <span class="o">=</span> <span class="n">base</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">      <span class="n">dockerfile</span> <span class="o">~</span><span class="n">base</span> <span class="o">~</span><span class="n">ocaml_version</span>
+</span></span><span class="line"><span class="cl">    <span class="k">in</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">build</span> <span class="o">~</span><span class="n">label</span><span class="o">:</span><span class="n">ocaml_version</span> <span class="o">~</span><span class="n">pull</span><span class="o">:</span><span class="bp">false</span> <span class="o">~</span><span class="n">dockerfile</span> <span class="o">(`</span><span class="nc">Git</span> <span class="n">src</span><span class="o">)</span> <span class="o">|&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nn">Docker</span><span class="p">.</span><span class="n">tag</span> <span class="o">~</span><span class="n">tag</span><span class="o">:(</span><span class="nn">Fmt</span><span class="p">.</span><span class="n">strf</span> <span class="s2">&#34;example-%s&#34;</span> <span class="n">ocaml_version</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">in</span>
+</span></span><span class="line"><span class="cl">  <span class="nn">Current</span><span class="p">.</span><span class="n">all</span> <span class="o">[</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.07&#34;</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="s2">&#34;4.08&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="o">]</span>
+</span></span></code></pre></div><p>Another use might be to keep the GitHub build status of each PR in your Git
+repository showing the result of fetching, building and testing the PR&rsquo;s head
+commit. If the head commit changes, the result must be recalculated.</p>
+<p>An OCurrent pipeline is written using an OCaml eDSL. When OCurrent evaluates it,
+it records the inputs used (e.g. the current set of open PRs and the head of
+each one), monitors them, and automatically recalculates when an input changes.</p>
+<p>The <a href="https://github.com/ocurrent/ocurrent/wiki">OCurrent wiki</a> contains documentation and examples. In particular,
+you might like to start by reading about the <a href="./examples">example pipelines</a> or
+how to <a href="https://github.com/ocurrent/ocurrent/wiki/Writing-plugins">write your own plugins</a>.</p>
+<p>Larger uses of OCurrent include the <a href="https://github.com/ocurrent/docker-base-images">OCaml Docker base image
+builder</a> and the <a href="https://github.com/ocurrent/ocaml-ci">CI pipeline</a> for OCaml platform projects.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

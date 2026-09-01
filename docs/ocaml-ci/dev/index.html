@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Development notes</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/ocaml-ci/dev/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Development notes">
+  <meta property="og:description" content="How to setup a development environment for OCaml CI.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Development notes</h1>
+
+
+<h1 id="local-development">Local development</h1>
+<p>This document sets you up to use local instances of <code>ocaml-ci-service</code> and <code>ocaml-ci-web</code> running in Docker containers to build an OCaml project that is in a repository owned by your GitHub user.</p>
+<h2 id="setting-up-a-github-app">Setting up a GitHub App</h2>
+<p><code>ocaml-ci</code> uses the functionality of a GitHub App to interact with GitHub. To use <code>ocaml-ci</code> yourself you must create your own. You can create a GitHub App (<a href="https://github.com/settings/apps">settings/apps</a>) under your own user and point it to localhost via a webhook payload delivery service like <a href="https://smee.io">smee.io</a>.</p>
+<p>To do this, follow the instructions in <a href="https://docs.github.com/en/developers/apps/getting-started-with-apps/setting-up-your-development-environment-to-create-a-github-app">Setting up your development environment to create a GitHub App</a> but when it comes to setting permissions for your app, set the following as the &ldquo;Repository permissions&rdquo;:</p>
+<pre tabindex="0"><code>Checks: Read and write
+Commit statuses: Read and write
+Contents: Read-only
+Metadata: Read-only
+Pull requests: Read-only
+</code></pre><p>Also, subscribe to the following events:</p>
+<pre tabindex="0"><code>Create
+Pull request
+Push
+</code></pre><h2 id="running-the-github-pipeline-locally">Running the GitHub pipeline locally</h2>
+<p>You will need the following:</p>
+<ol>
+<li>The GitHub App ID of the app you created</li>
+<li>A comma-separated list of GitHub accounts to allow—this could start out as just your GitHub account</li>
+<li>A file <code>private-key.pem</code> containing the private key associated with the app</li>
+<li>A file <code>webhook-secret</code> containing the webhook secret that is used to authenticate with the app</li>
+</ol>
+<p><code>private-key.pem</code> and <code>webhook-secret</code> must be stored in the same directory on the host. The directory path will be needed.</p>
+<p>Create a file <code>/etc/caddy/Caddyfile</code> containing:</p>
+<pre tabindex="0"><code>{
+	log default {
+		level WARN
+	}
+}
+
+http://localhost:8100 {
+	reverse_proxy service:8080
+}
+
+http://localhost {
+	reverse_proxy web:8090
+}
+</code></pre><p>You can then start the services with:</p>
+<pre tabindex="0"><code>APP_ID=... ALLOW_LIST=... SECRETS_DIR=... docker compose up
+</code></pre><p>You should see the admin site on <a href="http://localhost:8100"><code>http://localhost:8100</code></a> and the user site on <a href="http://localhost"><code>http://localhost</code></a>.</p>
+<p>Alternatively, you can store the environment variables in a <code>.env</code> file at the root of the project. For example:</p>
+<pre tabindex="0"><code>APP_ID=359343
+ALLOW_LIST=&#34;myusername,ocurrent&#34;
+SECRETS_DIR=$HOME/ci_secrets/
+</code></pre><p>You can then run the compose as simply:</p>
+<pre tabindex="0"><code>docker compose up
+</code></pre><p>If you want webhooks to be directed to your application, start <code>smee</code> in another terminal, replacing the argument to <code>--url</code> with the URL you generated before on <a href="https://smee.io">smee.io</a>:</p>
+<pre tabindex="0"><code>smee --url https://smee.io/xxxxxxxxxxxxxxxx --path /webhooks/github --port 8100
+</code></pre><p>Make sure that the GitHub App is sending webhooks to the URL, specified in its settings.</p>
+<h2 id="migrations">Migrations</h2>
+<p>Migrations are managed using <code>omigrate.</code> If you are using an opam switch for ocaml-ci then <code>omigrate</code> should be installed and you can create a new migration by doing this from the project root:</p>
+<pre tabindex="0"><code>omigrate create --dir migrations &lt;migration-name&gt;
+</code></pre><p>This will create timestamped files in the <code>migrations</code> directory that you can then populate with the sql necessary to introduce and remove the migration (in the <code>up</code> and <code>down</code> files respectively).</p>
+<p>Migrations will not run unless the <code>--migration-path</code> flag is present when invoking <code>ocaml-ci-service.</code></p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>

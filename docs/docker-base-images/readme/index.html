@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Readme</title>
+    <base href="https://www.ocurrent.org/" />
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    />
+    <meta property="og:url" content="https://www.ocurrent.org/docs/docker-base-images/readme/">
+  <meta property="og:site_name" content="OCurrent">
+  <meta property="og:title" content="Readme">
+  <meta property="og:description" content="Description about what is the purpose of docker-base-images.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="https://www.ocurrent.org//main.css"
+    />
+</head>
+
+
+    <body>
+        <div id="menu">
+    <h1>
+        <a
+            href="/"
+            title="homepage"
+            >OCurrent</a
+        >
+    </h1>
+    <ul>
+        
+        <li>
+            <a
+                href="/blog"
+                title="blog"
+                >Blog</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/docs"
+                title="docs"
+                >Docs</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/examples"
+                title="examples"
+                >Examples</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/ocurrent"
+                title="api"
+                >API</a
+            >
+        </li>
+        
+        <li>
+            <a
+                href="/community"
+                title="community"
+                >Community</a
+            >
+        </li>
+        
+    </ul>
+</div>
+
+
+        <div id="container">
+            <main>
+
+<h1>Readme</h1>
+
+
+<p><a href="https://ocaml.ci.dev/github/ocurrent/docker-base-images"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Focaml.ci.dev%2Fbadge%2Focurrent%2Fdocker-base-images%2Fmaster&amp;logo=ocaml" alt="OCaml-CI Build Status"></a></p>
+<p>This is an <a href="https://github.com/ocurrent/ocurrent">OCurrent</a> pipeline that builds Docker images for OCaml, for
+various combinations of Linux distribution, Windows version, OCaml version
+and architecture.</p>
+<p>The resulting images can be run as e.g.</p>
+<pre tabindex="0"><code>docker run --rm -it ocaml/opam:debian-11-ocaml-4.14
+</code></pre><p>These images are very similar to the ones previously available as <code>ocaml/opam2</code>,
+and use the same scripts from <a href="https://github.com/ocurrent/ocaml-dockerfile">ocurrent/ocaml-dockerfile</a>.
+However, they are much smaller because each image only includes one OCaml compiler.</p>
+<p>Each image includes two Dockerfiles showing how it was made:</p>
+<ul>
+<li><code>/Dockerfile.opam</code> is the first stage, which just installs the <code>opam</code> binary.</li>
+<li><code>/Dockerfile.ocaml</code> builds on the first stage by installing a particular opam switch.</li>
+</ul>
+<p>The service is running at <a href="https://images.ci.ocaml.org/">https://images.ci.ocaml.org/</a>.</p>
+<p>The rest of this README is about working on the build pipeline.</p>
+<h2 id="testing-locally">Testing locally</h2>
+<p>To see the pipeline, clone the repository and run <code>docker-compose up</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git clone --recursive https://github.com/ocurrent/docker-base-images.git
+</span></span><span class="line"><span class="cl">docker-compose up
+</span></span></code></pre></div><p>This runs with <code>--confirm harmless</code>, so that it will just show what it plans to do without trying to run any jobs yet.
+You should see:</p>
+<pre tabindex="0"><code>   current_web [INFO] Starting web server: (TCP (Port 8080))
+</code></pre><p>If you now browse to <a href="http://127.0.0.1:8080">http://127.0.0.1:8080</a> you can see the build pipeline.
+Note: It might complain about <code>--submission-service</code> being missing at first, but should fix itself once the scheduler service has started.
+It should look something like this:</p>
+<p align='center' style='max-width: 50%'>
+  <img src="./doc/pipeline.svg"/>
+</p>
+<p>It starts by cloning opam-repository,
+then creates images by installing an <code>opam</code> binary and a copy of opam-repository
+for many Linux distributions and architectures.</p>
+<p>These architecture-specific images get pushed to a staging repository on Docker Hub,
+and are then combined into a single multi-arch image.</p>
+<p>Separately, the architecture-specific base images are also used to create more images -
+one for each supported OCaml compiler version.
+These images are also pushed to a staging repository and then combined into multi-arch images.</p>
+<p>You can click on a box (e.g. the opam-repository clone step) and then on <code>Start now</code> to run that step manually, or
+you can set the confirmation threshold to <code>&gt;= Average</code> on the main page.
+The docker-compose file includes a single builder running locally, using the <code>linux-x86_64</code> pool and limited to one build at a time.
+You might want to update this, or add more builders.
+See the <a href="https://github.com/ocurrent/ocluster">OCluster</a> documentation for more information about that.</p>
+<p>The pipeline is defined in <a href="https://github.com/ocurrent/docker-base-images/blob/master/src/pipeline.ml">pipeline.ml</a>.
+This includes the Dockerfile definitions used to build the images.</p>
+<p>Once running with your chosen configuration, you can use the web UI to raise (or remove) the confirmation threshold.</p>
+
+
+</main>
+
+            <footer>
+    <a href="https://tarides.com/">
+        <img
+            src="/logos/tarides.png"
+            alt="Tarides logo"
+        />
+    </a>
+    <div id="license">
+        <p>
+            OCurrent is developed and maintained by Tarides for use in the OCaml open-source
+            community.
+        </p>
+        <p>
+            © 2022, the OCurrent authors. Distributed under the
+            <a href="https://github.com/ocurrent/ocurrent/blob/master/LICENSE">Apache-2.0</a>
+            license.
+        </p>
+    </div>
+</footer>
+
+        </div>
+    </body>
+</html>
